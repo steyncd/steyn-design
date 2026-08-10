@@ -1,0 +1,172 @@
+/* tokens.css — copied VERBATIM from ha_portal/src/app.css (2026-08-10).
+   The :root block and all nine [data-theme] blocks. Do not edit here: edit
+   HA Portal, then re-copy, so the two never drift apart. */
+
+:root {
+  /* ===== Steyn Home v2 tokens =====
+     Inverted from v1. Themes now set ONLY the neutral surface/text ramp
+     (--bg --s1 --s2 --line --mut --tx --tx2) via [data-theme] on <html>.
+     Brand accent, status and domain colours are FIXED in every theme — they
+     encode meaning, not taste, so a theme switch can never change what a
+     colour means.
+
+     Christo is red-green colour blind. Every critical distinction rides the
+     blue<->amber axis plus luminance, never green-vs-red, and colour is never
+     the only signal (always glyph + label + colour).
+
+     v1 names are kept as aliases so the not-yet-migrated views still render. */
+
+  /* ---- Neutral ramp (overridden per theme; these are `stone`, the default) */
+  --bg: #22252a;   /* page */
+  --s1: #2b2f35;   /* card surface */
+  --s2: #353a42;   /* raised / tile */
+  --line: #3d434b; /* hairline — neutral, NOT accent-derived */
+  --mut: #9da3ab;  /* muted text */
+  --tx: #eaecef;   /* primary text */
+  --tx2: #c6cbd1;  /* secondary text */
+
+  /* v1 aliases → v2 ramp */
+  --base: var(--bg);
+  --bg-base: var(--bg);
+  --text: var(--tx);
+  --text-2: var(--tx2);
+  --muted: var(--mut);
+  --muted-2: var(--mut);
+  --dim: var(--tx2);
+  --faint: var(--mut);
+  --faint-2: var(--mut);
+
+  /* ---- Brand accent — FIXED copper. Icon + primary buttons only. */
+  --acc: #d69a63;
+  --acc-ink: #151312; /* text ON copper — the only ink allowed on a copper fill */
+  --acc2: #c08650; /* deeper copper, for the one gradient on primary buttons */
+  --brand: var(--acc);
+  --brand-2: var(--acc2);
+  --grad: linear-gradient(135deg, var(--acc), var(--acc2));
+  --wash: color-mix(in srgb, var(--acc) 14%, transparent);
+  --wash2: color-mix(in srgb, var(--acc) 10%, transparent);
+  --soft: var(--wash); /* legacy alias — selected/active fills */
+  /* Titles are solid ink now: surfaces are neutral, colour lives on ink only.
+     Still a background so -webkit-background-clip:text keeps working. */
+  --title-grad: linear-gradient(0deg, var(--tx), var(--tx));
+  /* The domain .glow radial is retired — kept transparent so old markup no-ops. */
+  --glow: transparent;
+
+  /* ---- Status — NOT themable. Blue = good/live, amber = attention.
+     The v1 mint/rose ok-error pair is retired: it is the textbook
+     red-green confusable pair. */
+  --ok: #7ec8f2;   /* blue */
+  --warn: #f0a44a; /* amber */
+  --idle: var(--mut);
+  --off: var(--mut);
+  /* v1 aliases — note --error now resolves to amber, deliberately. */
+  --success: var(--ok);
+  --warning: var(--warn);
+  --error: var(--warn);
+
+  /* ---- Domain colours — NOT themable, re-spaced for separability.
+     health and climate are the closest remaining pair: if they ever share a
+     legend, add a glyph. */
+  --energy: #e8b33c;
+  --solar: var(--energy);
+  --climate: #d2662b;
+  --orange: var(--climate); /* legacy alias */
+  --security: #3fb79a;
+  --water: #9fd6f5;
+  --load: #3a7cc4;
+  --battery: #b08ad6;
+  --health: #efa0be;
+  --grid-alert: var(--warn); /* amber, never red */
+
+  /* ---- Room heat ramp — five bands at 14 / 17 / 21.5 / 25 °C.
+     Replaces the shipped #3b82f6 -> #38bdf8 -> #34d399 -> #fbbf24 -> #fb7185.
+     Green through amber to rose is the one ramp Christo cannot read: bands 3,
+     4 and 5 collapse into each other under deuteranopia, so a cold room and a
+     hot one looked the same. This runs blue -> amber and drops monotonically in
+     luminance, so the ordering survives with no colour vision at all. */
+  --heat-1: #2e6fbf; /* < 14  */
+  --heat-2: #6fb2e8; /* 14–17 */
+  --heat-3: #9db3c4; /* 17–21 */
+  --heat-4: #e8b33c; /* 22–25 */
+  --heat-5: #d2662b; /* > 25  */
+
+  /* ---- Surfaces. Neutral only: no tinted card backgrounds. */
+  --card-hover: color-mix(in srgb, var(--tx) 7%, transparent);
+  --border: var(--line);
+  --border-strong: color-mix(in srgb, var(--tx) 18%, transparent);
+  --fill: color-mix(in srgb, var(--tx) 5%, transparent);
+  --fill-strong: color-mix(in srgb, var(--tx) 10%, transparent);
+  --divider: var(--line);
+  --glass-blur: blur(20px) saturate(140%); /* modals ONLY — never on chrome */
+  --shadow: 0 16px 40px -24px rgba(0, 0, 0, 0.8);
+
+  /* ---- Radii: two, plus pill. 22/18/12 retired.
+     --r-surface / --r-control are the handover's names and the ones to use in
+     new code; --r-card / --r-ctl are kept as aliases because ~37 views already
+     reference them. */
+  --r-surface: 16px;
+  --r-control: 10px;
+  --r-pill: 999px;
+  --r-card: var(--r-surface); /* alias */
+  --r-ctl: var(--r-control);  /* alias */
+  --r-hero: var(--r-surface); /* legacy */
+  --r: var(--r-surface);      /* legacy */
+  --r-tile: var(--r-control); /* legacy */
+
+  --dur: 180ms;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* One static paint on the root, now neutral rather than accent-washed. */
+  --aurora:
+    radial-gradient(1100px 760px at 4% -10%, color-mix(in srgb, var(--s2) 55%, transparent), transparent 55%),
+    radial-gradient(950px 760px at 108% 4%, color-mix(in srgb, var(--s1) 60%, transparent), transparent 52%),
+    var(--bg);
+
+  color-scheme: dark;
+}
+
+/* ===== Nine neutral themes — each sets ONLY the ramp.
+   Groups: neutral (stone, basalt, fog) · cool (slate, harbour, ink)
+           · warm (clay, graphite, plum). `stone` is :root above. */
+
+/* --- neutral --- */
+[data-theme="stone"] {
+  --bg: #22252a; --s1: #2b2f35; --s2: #353a42; --line: #3d434b;
+  --mut: #9da3ab; --tx: #eaecef; --tx2: #c6cbd1;
+}
+[data-theme="basalt"] {
+  --bg: #17191d; --s1: #1f2227; --s2: #282c32; --line: #31353c;
+  --mut: #939aa3; --tx: #e9ebee; --tx2: #c4c9d0;
+}
+[data-theme="fog"] {
+  --bg: #2a2e34; --s1: #343940; --s2: #3e444c; --line: #474e57;
+  --mut: #a6adb6; --tx: #edeff2; --tx2: #cbd1d8;
+}
+
+/* --- cool --- */
+[data-theme="slate"] {
+  --bg: #1b2027; --s1: #232a33; --s2: #2c343f; --line: #353e4a;
+  --mut: #9aa7b4; --tx: #e8edf3; --tx2: #c3cdd8;
+}
+[data-theme="harbour"] {
+  --bg: #1e242b; --s1: #262e37; --s2: #303a45; --line: #394450;
+  --mut: #97a5b2; --tx: #e7edf2; --tx2: #c2ccd6;
+}
+[data-theme="ink"] {
+  --bg: #141a24; --s1: #1c2431; --s2: #25303f; --line: #2d3a4b;
+  --mut: #94a2b5; --tx: #e6ecf5; --tx2: #bfcadb;
+}
+
+/* --- warm --- */
+[data-theme="clay"] {
+  --bg: #232120; --s1: #2c2927; --s2: #363230; --line: #403b38;
+  --mut: #a39c96; --tx: #efebe7; --tx2: #cec7c1;
+}
+[data-theme="graphite"] {
+  --bg: #1e1c1b; --s1: #272422; --s2: #322e2b; --line: #3c3733;
+  --mut: #a69e95; --tx: #f1ede7; --tx2: #d0c8bf;
+}
+[data-theme="plum"] {
+  --bg: #201c26; --s1: #292430; --s2: #332d3c; --line: #3d3647;
+  --mut: #a29aae; --tx: #ede9f2; --tx2: #cbc4d4;
+}

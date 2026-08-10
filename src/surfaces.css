@@ -1,0 +1,322 @@
+/* surfaces.css — the shared primitives, copied VERBATIM from
+   ha_portal/src/app.css (2026-08-10): base resets, keyframes, and the
+   .card / .cell / .lb / .kicker / .divider / .big / .num / .sub / .status /
+   .attn / .btn-primary set named in 00-OVERVIEW.md §5. */
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+body {
+  background: var(--bg-base);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  color: var(--text);
+  overflow-x: hidden;
+}
+a {
+  color: var(--water);
+  text-decoration: none;
+}
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+input,
+select {
+  font-family: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--acc) var(--fill, 0%), rgba(255, 255, 255, 0.14) var(--fill, 0%));
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  margin-top: -5px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--acc) var(--fill, 0%), rgba(255, 255, 255, 0.14) var(--fill, 0%));
+}
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+
+@keyframes dashmove {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+@keyframes pfade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes ppop {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- Shared surface + label (the prototype's SC / LB) ---- */
+/* ===== Aurora Command surfaces & primitives (global; class names map 1:1 to the
+   handoff §2). Two tiers: .card = glass (hero/controls), .cell = hairline (data). */
+.card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.025));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 18px 40px -28px #000;
+  border-radius: var(--r-card);
+}
+.card--hero {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.03));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 20px 44px -32px #000;
+  border-radius: var(--r-hero);
+  position: relative;
+  overflow: hidden;
+}
+.cell {
+  background: rgba(255, 255, 255, 0.028);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  border-radius: var(--r-tile);
+}
+/* Domain corner glow RETIRED (v2): surfaces are neutral, colour lives on ink.
+   The element is kept as an inert no-op so existing markup doesn't need edits. */
+.glow {
+  display: none;
+}
+
+/* v2 typography: weight 800 is reserved for VALUES; labels drop to 700.
+   uppercase + .14em tracking is retired here and kept only on section
+   dividers (.divider), which is the one place it still earns its keep. */
+.lb,
+.micro {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--mut);
+}
+
+/* Section labels — "You usually", "Right now", "Wants you".
+   NOT uppercase, despite BUILD-ORDER's "except section dividers": the
+   prototype is the source of truth and renders these three at 11px/700 --mut
+   with no transform and no tracking. Verified against Steyn Portal v3. */
+.divider {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mut);
+}
+
+/* The kicker is the treatment that IS uppercase in the prototype: a card's own
+   header, 11px/700 with .1em tracking, usually copper — "VANAAND 21:00",
+   "JULIE · DIE MAAND", "WHO TO CALL". It heads a card; .divider heads a list of
+   them. Keeping them as separate classes is the only way the distinction
+   survives someone editing one of them later. */
+.kicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--acc);
+}
+.micro {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10.5px;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+.big {
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.big .unit {
+  /* Exactly the handover's rule: 0.5em / 700 / --tx2. Was .44em / 400 / --mut,
+     which read as a caption rather than part of the value. */
+  font-size: 0.5em;
+  font-weight: 700;
+  /* MUST reset: .big sets -1.5px tracking, which the unit was inheriting and
+     which jammed it against the last digit on every hero metric. */
+  letter-spacing: 0;
+  margin-left: 0.14em;
+  color: var(--tx2);
+}
+.sub {
+  font-size: 11.5px;
+  color: var(--text-2);
+}
+.drill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--muted);
+  transition: color var(--dur) var(--ease);
+}
+.drill:hover {
+  color: var(--acc);
+}
+
+/* Accessible status — glyph + label + colour, NEVER colour alone (§2.2, recc 5a). */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.status svg {
+  width: 1em;
+  height: 1em;
+}
+.status--ok {
+  color: var(--ok);
+}
+.status--idle {
+  color: var(--idle);
+}
+.status--off {
+  color: var(--off);
+}
+.status--warn {
+  color: var(--warn);
+}
+
+/* Needs-attention item (§2.5, recc 5d/5e) */
+.attn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 12px;
+  border-radius: 11px;
+}
+/* v2: no tinted fill. Attention reads from the amber rule + glyph + label,
+   so the surface stays neutral and the signal is never hue alone. */
+.attn--warn {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--line);
+  border-left: 2px solid var(--warn);
+}
+.attn__badge {
+  width: 19px;
+  height: 19px;
+  border-radius: 5px;
+  background: var(--warn);
+  color: #05070c;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.attn__text {
+  flex: 1;
+  font-size: 12.5px;
+}
+.btn-primary {
+  padding: 6px 12px;
+  border-radius: 9px;
+  background: var(--grad);
+  color: #05070c;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.reduce-motion * {
+  animation: none !important;
+}
+/* Also honour the OS reduced-motion setting, not just the in-app toggle. */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+  }
+}
+
+/* Wall / TV density (recc 5g): enlarge hero metrics, drop secondary affordances
+   for across-room glance. Toggled via the .wall class on <html> by prefs.apply. */
+.wall .big {
+  font-size: 1.28em;
+}
+.wall .drill {
+  display: none;
+}
+
+/* ---- View Transitions (Safari 18+, Chrome 111+) --------------------------
+   A short cross-fade on view switches. Deliberately quick — 180ms reads as
+   responsive; anything slower on a dashboard feels like lag rather than polish.
+   Honours reduce-motion, and browsers without support simply swap as before. */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) { animation: vt-out 140ms ease both; }
+  ::view-transition-new(root) { animation: vt-in 180ms ease both; }
+}
+@keyframes vt-out { to { opacity: 0; } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(4px); } }
+
+/* The reduce-motion class the app sets from prefs must win over the media query. */
+.reduce-motion ::view-transition-old(root),
+.reduce-motion ::view-transition-new(root) { animation: none; }
