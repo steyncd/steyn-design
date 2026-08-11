@@ -23,18 +23,29 @@
     badge?: number | null;
   };
 
+  /** One entry in the cross-portal switcher. Shape matches Fabric's registry. */
+  export type PortalLink = { id: string; name: string; url: string; icon?: string };
+
   let {
     product,
+    mark = null,
     nav = [],
     active = "",
     onnavigate,
     homeHref = "/",
     frontDoorUrl = null,
+    portals = null,
     header,
     children,
   }: {
     /** Wordmark in the rail — "Vault", "Homestead". */
     product: string;
+    /**
+     * Icon name drawn inside the brand mark. Null leaves the plain copper
+     * gradient, which is what every module shipped with — a bare gradient square
+     * is anonymous, and four portals side by side on a phone all looked alike.
+     */
+    mark?: string | null;
     nav?: NavItem[];
     active?: string;
     /** Called with the item id. Omit and Shell falls back to the item's href. */
@@ -45,12 +56,43 @@
      * passes null, because a link back to yourself is furniture, not navigation.
      */
     frontDoorUrl?: string | null;
+    /**
+     * Cross-portal switcher (handoff-v2 item 20).
+     *
+     * A **loader function**, not a URL. The spec says Shell should fetch
+     * `GET /portals` itself, but that endpoint requires the caller's Firebase ID
+     * token and Shell has no business knowing how a module authenticates — it
+     * owns no data and no routing, and that is what makes it usable by Fabric's
+     * admin screen and Vault's six-route app without either bending. The module
+     * passes its own authenticated fetch; Shell calls it once and caches for the
+     * session.
+     *
+     * On any failure the switcher simply does not render. A Fabric outage
+     * degrades cross-portal navigation rather than the app you are standing in.
+     */
+    portals?: (() => Promise<PortalLink[]>) | null;
     /** Right-hand side of the sticky header — search box, user chip, actions. */
     header?: Snippet;
     children?: Snippet;
   } = $props();
 
   let open = $state(false);
+
+  let links = $state<PortalLink[]>([]);
+  let switcherOpen = $state(false);
+
+  // Loaded once per mount, never retried on a timer: a sidebar that re-requests
+  // the registry every few seconds is a sidebar that costs Firestore reads for
+  // nothing. `void` because a failure here is not the app's problem.
+  $effect(() => {
+    if (!portals) return;
+    void portals()
+      .then((p) => (links = p.filter((x) => x.url)))
+      .catch(() => (links = []));
+  });
+
+  /** Everything except the portal you are already in. */
+  const others = $derived(links.filter((l) => l.name.toLowerCase() !== product.toLowerCase()));
 
   function go(item: NavItem, e: MouseEvent) {
     if (onnavigate) {
@@ -64,7 +106,9 @@
 <div class="shell" class:shell--open={open}>
   <aside class="rail">
     <a class="brand" href={homeHref} aria-label={product}>
-      <span class="brand__mark" aria-hidden="true"></span>
+      <span class="brand__mark" aria-hidden="true">
+        {#if mark}<Icon name={mark} size={13} />{/if}
+      </span>
       <span class="brand__name">{product}</span>
     </a>
 
@@ -83,6 +127,30 @@
         </a>
       {/each}
     </nav>
+
+    <!-- Cross-portal switcher. Collapsed by default so the module's own nav stays
+         the thing you see first: this is for leaving, not for working. A new
+         portal registered in Fabric appears here with no deploy and no tag bump,
+         which is the whole point of item 20. -->
+    {#if others.length > 0}
+      <div class="switch">
+        <button class="switch__head" onclick={() => (switcherOpen = !switcherOpen)} aria-expanded={switcherOpen}>
+          <Icon name={switcherOpen ? "chevron-down" : "chevron-right"} size={13} />
+          <span>Portals</span>
+          <span class="switch__n num">{others.length}</span>
+        </button>
+        {#if switcherOpen}
+          <div class="switch__list">
+            {#each others as l (l.id)}
+              <a class="switch__item" href={l.url}>
+                <Icon name={l.icon ?? "door"} size={15} />
+                <span>{l.name}</span>
+              </a>
+            {/each}
+          </div>
+        {/if}
+      </div>
+    {/if}
 
     {#if frontDoorUrl}
       <a class="rail__foot" href={frontDoorUrl}>
@@ -153,6 +221,12 @@
     border-radius: 7px;
     background: var(--grad);
     flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    /* The glyph sits ON the copper gradient, so it takes the page background
+       colour rather than currentColor — an accent-coloured glyph on an accent
+       fill is invisible. */
+    color: var(--bg);
   }
 
   .nav {
@@ -198,6 +272,53 @@
     font-weight: 800;
     display: grid;
     place-items: center;
+  }
+
+  .switch {
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+  }
+  .switch__head {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    width: 100%;
+    padding: 6px 10px;
+    border-radius: var(--r-control);
+    color: var(--mut);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  .switch__head:hover {
+    color: var(--tx);
+  }
+  .switch__n {
+    margin-left: auto;
+    font-size: 10.5px;
+    font-weight: 800;
+  }
+  .switch__list {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding-top: 2px;
+  }
+  .switch__item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 10px;
+    border-radius: var(--r-control);
+    color: var(--mut);
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .switch__item:hover {
+    background: var(--card-hover);
+    color: var(--tx);
   }
 
   .rail__foot {
