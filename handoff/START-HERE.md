@@ -114,3 +114,73 @@ with household identity.
 The short version: the **MariaDB dump** is the only time-sensitive item, because
 everything older than the 30-day purge window is gone for good and the window
 keeps moving.
+
+---
+
+## Update — 2026-08-11, end of session
+
+### Sign-in was broken everywhere; here is why and what was done
+
+`signInWithPopup` returns the credential through `sessionStorage` **on the
+`authDomain` origin**. Safari partitions storage **by site**, so with
+`authDomain` on a different site from the app, the handler could not read the
+state it had just written. Symptom: *"Unable to process request due to missing
+initial state ... storage-partitioned browser environment"*.
+
+Nothing was misconfigured. Authorised domains, the auth handler, App Check, the
+API key and every bundle all checked out. Do not go hunting there again.
+
+**Fabric / Vault / Hindsight** — `authDomain` now resolves to the app's own
+hostname, which works because their Hosting sites live in `steyn-fabric` and so
+serve `steyn-fabric`'s `/__/auth/handler`. Fixed and live.
+
+**Front Door** — could not use that fix: its sites live in `steyn-frontdoor`,
+so its domains serve the **wrong project's** handler. A dedicated `steyn-auth`
+site inside `steyn-fabric` now serves `auth.helloeben.co.za` and
+`auth.helloliam.co.za`; same registrable domain means same site, so storage is
+not partitioned.
+
+`VITE_AUTH_HOSTS_READY` is a **comma-separated list of registrable domains**
+whose `auth.*` host is confirmed serving. Certificates land independently.
+
+- `helloliam.co.za` — ✅ enabled and deployed
+- `helloeben.co.za` — ⏳ cert still issuing. Add it once this returns 200:
+  `curl -o /dev/null -w '%{http_code}' https://auth.helloeben.co.za/__/auth/handler`
+  then `npm run deploy` in `FrontDoor`.
+
+**Never enable a domain before its cert exists.** Doing so was tried and rolled
+back: it turns "fails only in Safari" into "fails in every browser".
+
+### Every new portal needs THREE registrations, not two
+
+Missing any one of them looks like a sign-in failure:
+
+1. Firebase Hosting custom domain
+2. Authorised domain in **`steyn-fabric`** (never in the module's own project)
+3. `EXTRA_ALLOWED_ORIGINS` on `fabric-api`
+
+When updating env vars containing commas or `@`, use an alternative delimiter —
+and **not `^@^`**, since `@` appears in every service-account email:
+
+```bash
+gcloud run services update fabric-api --region=africa-south1 --project=steyn-fabric \
+  --update-env-vars "^|^MODULE_SERVICE_ACCOUNTS=a@x.com=a,b@x.com=b"
+```
+
+A plain `--set-env-vars` silently split `MODULE_SERVICE_ACCOUNTS` on its commas
+and created an env var literally named `vault-api@steyn-fabric...`, leaving Vault
+unable to post attention at all.
+
+### Still outstanding
+
+1. `helloeben.co.za` auth host — one flag edit once the cert lands.
+2. **Vault Drive Picker** — swap `drive.readonly` (restricted; needs a paid CASA
+   assessment) for `drive.file` (non-sensitive) plus the Google Picker. Removes
+   the "unverified app" warning *and* gives real folder browsing. Trade-off: no
+   polled scanner folder — you hand it files explicitly.
+3. **Vault estate screen + printed handover sheet.** Types and the `estate`
+   record are done. The printed sheet matters more than the screen: a digital
+   vault is no use to someone who cannot sign in. Note the legal point — SA law
+   needs the **original signed will**; a copy raises a presumption of revocation.
+4. **Hindsight query UI** — named questions off `daily_entity` / `context_daily`,
+   never `state_raw`.
