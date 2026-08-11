@@ -1,137 +1,93 @@
 # What Christo needs to do
 
-Last updated 2026-08-10, after Fabric and Front Door went live.
-
-Ordered by what unblocks the most. Everything not on this list is either done or
-is mine to do.
+Rewritten 2026-08-11 against verified state. Everything not listed here is
+either done or mine.
 
 ---
 
-## 1. ~~Request a billing quota increase~~ ❌ NO LONGER NEEDED
+## 1. The MariaDB dump ⏰ *the only time-sensitive item*
 
-Superseded 2026-08-10. You chose to stay inside the five existing billing slots,
-so the modules were regrouped instead. See `CONSOLIDATION.md`.
+This is the **only way to recover any history from before 2026-08-11**.
+Everything older than the recorder's 30-day purge window is already gone, and
+the window keeps moving — each day you wait, another day is lost permanently.
 
-**Hindsight is already live** as a result — it went into `steyn-fabric` and needed
-no new project at all. The recorder-purge clock has stopped.
+I cannot run it. The recorder's host is `core-mariadb`, a Docker-internal
+hostname inside HAOS's supervisor network: port 3306 is closed on `192.168.0.7`
+and no mysql client exists on the Mac. It has to run inside HAOS.
 
-The one thing you gave up: Vault's documents and its Gmail/Drive OAuth scopes now
-share a project with household identity. If a billing slot ever frees up, moving
-Vault out is the first thing to spend it on.
+A previous attempt produced nothing I can see — most likely it landed in
+`/root/` in a terminal session, and the SMB share only exposes `/config`.
 
----
+**Re-run with an explicit path inside `/config`:**
 
-## 2. ~~Run `gcloud auth application-default login`~~ ✅ DONE 2026-08-10
-
-ADC is in place, quota project set to `steyn-fabric`, and `npm run seed` now runs
-clean: 10 portals, Christo as owner.
-
----
-
-## 3. Get Mandri signed in — then one command
-
-`mandrizeeman@gmail.com` is now in `Fabric/config/seed.yaml` with role `partner`.
-She is **not** seeded yet, because claims can only attach to a uid that already
-exists, and she has never signed in.
-
-**Do this:**
-
-1. Mandri opens <https://steyn-frontdoor.web.app> and clicks *Continue with
-   Google* as `mandrizeeman@gmail.com`. She will see
-   *"This Google account has no access"* — that is correct and expected.
-2. Then run:
-
-   ```bash
-   cd ~/Code/Fabric && npm run seed
-   ```
-
-3. She reloads the page. The client forces a token refresh when a signed-in user
-   has no claims, so she should not need to sign out.
-
-Still placeholders, send them when you have them:
-
-- **Lounge TV** → role `display` (whatever account the kiosk browser uses)
-- **House-sitter** → role `guest`, created disabled
-
----
-
-## 4. Install the Front Door and set it as your homepage
-
-This is the whole point of the module: one address that fixes "I forgot that
-existed".
-
-- **iPhone** — open <https://steyn-frontdoor.web.app> in Safari → Share → Add to
-  Home Screen. It opens without browser chrome.
-- **Both desktops** — set `https://steyn-frontdoor.web.app` as the browser
-  homepage, and install it from the address-bar install icon in Chrome/Edge.
-
----
-
-## 5. Home Assistant changes — tell me if you want me to do these
-
-`/Volumes/config` is mounted, so I *can* make these edits, but they touch your
-live house config and I would rather you said go first.
-
-**a. The morning digest.** Add a REST sensor to `feature_morning_digest.yaml`
-reading Fabric's digest endpoint, and append its lines to the existing 06:30
-message:
-
-- URL: `https://fabric-api-685867683378.africa-south1.run.app/digest`
-- Header: `x-api-key:` — the value is in Secret Manager as `ha-digest-api-key`
-  in `steyn-fabric`. Put it in `secrets.yaml`, never in the YAML directly.
-
-⚠ **HA's `rest:` platform is all-or-nothing** — one bad sensor kills every REST
-sensor in the config, and `check_config` does not catch it. Diagnose via
-`system_log/list`, not by staring at the YAML.
-
-**b. Hindsight's ingest automation — this is the one that matters now.** The pipe
-is live and empty; nothing reaches BigQuery until HA posts to it. The shape needs
-your call first (a state-change buffer vs a small pyscript/AppDaemon module) —
-see `Hindsight/README.md`, *The HA side*. Tell me which and I will write it.
-
-**c. WhatsApp commands.** `feature_wa_inbound.yaml` needs deterministic `choose`
-branches for `doc <what>`, `docs`, `warranty <thing>`, `jobs` and `trip`, plus
-routing an inbound image with no caption to Vault's intake. **Not buildable yet**
-— they depend on Vault and Homestead, which are not built.
-
-Keep `mode: parallel, max: 10` on `wa_process_message` and
-`continue_on_error: true` on the AI path. Both were hard-won.
-
----
-
-## 6. NextDNS allowlist
-
-Add these to profile *HelloLiamDNS*, or calls will fail in a way that looks
-exactly like broken code:
-
-```
-fabric-api-685867683378.africa-south1.run.app
-hindsight-ingest-685867683378.africa-south1.run.app
-steyn-frontdoor.web.app
-steyn-fabric.web.app
+```bash
+mysqldump -h core-mariadb -u homeassistant -p homeassistant states states_meta | gzip > /config/states.sql.gz
 ```
 
----
+`/config` is the share I can read. Gzip matters — that table is likely hundreds
+of megabytes. You will need the **Terminal & SSH** add-on; `addon_configs` shows
+only Frigate installed.
 
-## 7. Optional — the custom domain
-
-Front Door runs on `*.web.app` and the spec explicitly allows this. If you want
-`steyn.house` (or similar), register it and tell me. Attaching it needs **no code
-change** — only DNS and config. The `*.web.app` URL stays live permanently as the
-fallback when DNS breaks.
+Once it is there, tell me and I will write the backfill loader.
 
 ---
 
-## Not yours — things I still owe you
+## 2. Nothing else is blocking
 
-- **Vault, Homestead, Waypoint — not built.** All three now have a home in
-  `steyn-fabric` and nothing blocks them but the work itself.
-- The Hindsight MariaDB backfill — needs a dump from you (`Hindsight/README.md`)
-- App Check enforcement (reCAPTCHA Enterprise) on both live projects
-- Log sinks → Pub/Sub `fabric-errors` → BigQuery, so `GET /errors/summary` works
-- WIF CI for `steyn-frontdoor` (Fabric has it; Front Door deploys are manual)
-- Regenerating the PWA PNG icons from the new door `favicon.svg` — they still
-  carry HA Portal's house glyph, because no rasteriser is installed here
-- Checking both screens against `Fabric Portal.dc.html`, which was **not in the
-  handover zip** and is not on this machine. If you have it, send it — §5 calls it
-  the visual reference for layout, density and copy tone.
+Fabric, Front Door and Hindsight are live and self-running. No console steps are
+outstanding.
+
+---
+
+## Optional, whenever it suits
+
+**Custom domain for the Front Door.** It runs on `*.web.app` and the spec allows
+that indefinitely. If you register one (`steyn.house` was suggested), attaching
+it needs **no code change** — only DNS and config, and the `*.web.app` URL stays
+live as the fallback when DNS breaks.
+
+**Lounge TV and house-sitter accounts.** Still `CHANGEME` placeholders in
+`Fabric/config/seed.yaml`. Send the Google addresses when you want them.
+
+**Mandri.** Parked at your request. When she is ready: she signs in once at
+<https://steyn-frontdoor.web.app> (she will correctly see "no access"), then
+`cd ~/Code/Fabric && npm run seed`.
+
+**App Check enforcement.** The reCAPTCHA Enterprise key is registered on both web
+apps but enforcement is **off**. Turning it on before the clients send tokens
+would lock you out. Say the word and I will wire the client SDK, watch tokens
+flow for a day, then enable it — in that order.
+
+---
+
+## Done — no action needed
+
+| | |
+|---|---|
+| Billing quota increase | ❌ no longer needed — modules regrouped instead |
+| `gcloud auth application-default login` | ✅ done, quota project set |
+| `gcloud` on PATH | ✅ fixed via `~/.zshrc` |
+| Google sign-in in `steyn-fabric` | ✅ enabled |
+| Christo as `owner` + 10 portals seeded | ✅ done |
+| `fabric-api` reachable | ✅ `allUsers` invoker, auth enforced in-app |
+| NextDNS allowlist | ✅ done |
+| HA pyscript ingest | ✅ installed and ingesting |
+| HA logging for the ingest module | ✅ added to the existing `logger:` block |
+| Error-log sinks from all five projects | ✅ flowing into `steyn-fabric.fabric` |
+
+---
+
+## Things I still owe you
+
+- **Vault, Homestead, Waypoint** — not started. See
+  [`START-HERE.md`](START-HERE.md) for the recommended order.
+- **The backfill loader** — blocked on item 1.
+- **Passkeys.** Listed in the Fabric v0 spec, but **Firebase Auth has no passkey
+  provider**. It would mean implementing WebAuthn end to end plus a credential
+  store — a few days of security-sensitive work. My recommendation is not to,
+  for a two-person household already on Google sign-in.
+- **PWA icons** still carry HA Portal's house glyph; no rasteriser on this
+  machine to render the new door `favicon.svg` to PNG.
+- **`Fabric Portal.dc.html`** — the visual reference named in `00-OVERVIEW.md` §5
+  was never in the handover zip. Both UIs were built from the tokens and written
+  specs alone. If you have it, send it.
