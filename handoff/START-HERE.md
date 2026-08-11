@@ -144,9 +144,10 @@ not partitioned.
 whose `auth.*` host is confirmed serving. Certificates land independently.
 
 - `helloliam.co.za` — ✅ enabled and deployed
-- `helloeben.co.za` — ⏳ cert still issuing. Add it once this returns 200:
-  `curl -o /dev/null -w '%{http_code}' https://auth.helloeben.co.za/__/auth/handler`
-  then `npm run deploy` in `FrontDoor`.
+- `helloeben.co.za` — ✅ enabled and deployed (cert landed 2026-08-11)
+
+Both `auth.*` hosts verified serving 200 before either was enabled. Any future
+domain follows the same rule.
 
 **Never enable a domain before its cert exists.** Doing so was tried and rolled
 back: it turns "fails only in Safari" into "fails in every browser".
