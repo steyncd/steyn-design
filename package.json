@@ -1,7 +1,7 @@
 {
   "name": "@steyncd/steyn-design",
   "version": "2.0.0",
-  "description": "Shared design system for the Steyn portals \u2014 tokens, surfaces, Shell, Icon, fmt",
+  "description": "Shared design system for the Steyn portals — tokens, surfaces, Shell, Icon, fmt",
   "type": "module",
   "license": "UNLICENSED",
   "private": true,
@@ -28,11 +28,12 @@
     "check": "svelte-check --tsconfig ./tsconfig.json"
   },
   "peerDependencies": {
-    "svelte": "^5.0.0",
-    "firebase": "^10 || ^11 || ^12"
+    "firebase": "^10 || ^11 || ^12",
+    "svelte": "^5.0.0"
   },
   "devDependencies": {
     "@tsconfig/svelte": "^5.0.4",
+    "firebase": "^12.17.1",
     "svelte": "^5.19.0",
     "svelte-check": "^4.1.4",
     "typescript": "^5.7.3"
