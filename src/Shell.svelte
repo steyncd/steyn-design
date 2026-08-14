@@ -212,7 +212,7 @@
     padding: 6px 8px 16px;
     color: var(--tx);
     font-weight: 800;
-    font-size: 15px;
+    font-size: 0.9375rem;
     letter-spacing: -0.2px;
   }
   .brand__mark {
@@ -241,7 +241,7 @@
     padding: 8px 10px;
     border-radius: var(--r-control);
     color: var(--mut);
-    font-size: 12.5px;
+    font-size: 0.7812rem;
     font-weight: 700;
     transition:
       background var(--dur) var(--ease),
@@ -268,7 +268,7 @@
     border-radius: var(--r-pill);
     background: var(--fill-strong);
     color: var(--tx2);
-    font-size: 10.5px;
+    font-size: 0.72rem;
     font-weight: 800;
     display: grid;
     place-items: center;
@@ -287,7 +287,7 @@
     padding: 6px 10px;
     border-radius: var(--r-control);
     color: var(--mut);
-    font-size: 11px;
+    font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.3px;
     text-transform: uppercase;
@@ -297,7 +297,7 @@
   }
   .switch__n {
     margin-left: auto;
-    font-size: 10.5px;
+    font-size: 0.72rem;
     font-weight: 800;
   }
   .switch__list {
@@ -313,7 +313,7 @@
     padding: 6px 10px;
     border-radius: var(--r-control);
     color: var(--mut);
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
   }
   .switch__item:hover {
@@ -328,7 +328,7 @@
     gap: 6px;
     padding: 8px 10px;
     color: var(--mut);
-    font-size: 11.5px;
+    font-size: 0.72rem;
     font-weight: 700;
   }
   .rail__foot:hover {

@@ -205,14 +205,14 @@
 
   .name {
     margin: 0 0 7px;
-    font-size: 27px;
+    font-size: 1.6875rem;
     font-weight: 800;
     letter-spacing: -0.8px;
     color: var(--tx);
   }
   .tag {
     margin: 0;
-    font-size: 13px;
+    font-size: 0.8125rem;
     line-height: 1.5;
     color: var(--mut);
   }
@@ -226,7 +226,7 @@
     margin-top: 24px;
     padding: 12px 18px;
     border-radius: var(--r-pill);
-    font-size: 13.5px;
+    font-size: 0.8438rem;
     font-weight: 700;
     color: var(--tx);
     background: var(--fill);
@@ -276,7 +276,7 @@
     padding: 11px 13px;
     border-radius: 12px;
     text-align: left;
-    font-size: 12px;
+    font-size: 0.75rem;
     line-height: 1.45;
     color: var(--tx2);
     background: var(--fill);
@@ -298,7 +298,7 @@
 
   .once {
     margin: 16px 0 0;
-    font-size: 11px;
+    font-size: 0.72rem;
     color: var(--mut);
   }
 
@@ -314,7 +314,7 @@
   .sib {
     padding: 4px 9px;
     border-radius: var(--r-pill);
-    font-size: 10.5px;
+    font-size: 0.72rem;
     font-weight: 700;
     color: var(--mut);
     box-shadow: inset 0 0 0 1px var(--line);

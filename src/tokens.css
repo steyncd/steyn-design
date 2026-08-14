@@ -116,6 +116,58 @@
   --dur: 180ms;
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
 
+  /* ---- Type scale, in rem — added 2026-08-14 after an audit found 198 font-size
+     declarations in px and 2 in rem.
+
+     px font sizes ignore the browser's font-size setting entirely. Someone who
+     raises their default because they need to gets no change at all, which is the
+     single most common accessibility setting on the web and the one this estate was
+     silently overriding. rem respects it; every size below is relative to the root.
+
+     The scale is also *floored*. The audit found the three commonest sizes were
+     10px, 10.5px and 11px — the whole interface sat at roughly 70% of standard body
+     size, which is hard reading for anyone over forty and impossible on the lounge
+     display at three metres. Nothing here goes below 0.72rem (11.5px), and body
+     text is 0.875rem (14px) rather than the effective 11–12px it had been.
+
+     Kept deliberately conservative rather than jumping to the 16px body text the
+     guidance suggests: these screens are dense by design — a health table with ten
+     columns is the point — and a 40% type increase would reflow every layout in the
+     estate at once. This is the floor moving up, not a redesign. */
+  --fs-micro: 0.72rem; /* 11.5px — uppercase labels, table headers. The floor. */
+  --fs-small: 0.78rem; /* 12.5px — secondary text, chips, captions */
+  --fs-body: 0.875rem; /* 14px  — default body, form fields, table cells */
+  --fs-lead: 1rem; /* 16px  — lead paragraphs, card titles */
+  --fs-h3: 1.15rem; /* 18.4px */
+  --fs-h2: 1.5rem; /* 24px */
+  --fs-h1: 1.75rem; /* 28px */
+  --fs-display: clamp(1.7rem, 4.4vw, 2.5rem); /* hero greeting */
+
+  /* ---- Spacing, on an 8pt grid with a 4px half-step.
+     There were no spacing tokens at all, so every gap in the estate was an ad-hoc
+     px value and the same visual gap was written as 9px, 10px and 12px in three
+     different components. */
+  --sp-1: 0.25rem; /* 4px  */
+  --sp-2: 0.5rem; /* 8px  */
+  --sp-3: 0.75rem; /* 12px */
+  --sp-4: 1rem; /* 16px */
+  --sp-5: 1.5rem; /* 24px */
+  --sp-6: 2rem; /* 32px */
+
+  /* ---- Minimum interactive target, WCAG 2.2 SC 2.5.8 (Level AA).
+     24 CSS px, unless the target has enough spacing around it. Named as a token so
+     the rule in surfaces.css and any component override cannot disagree. */
+  --target-min: 24px;
+
+  /* ---- Focus ring, WCAG 2.2 SC 2.4.13 Focus Appearance (Level AA).
+     At least a 2px perimeter at 3:1 contrast against the unfocused state. Copper on
+     every theme's neutral ramp clears that comfortably, and the 2px offset keeps the
+     ring off the control's own border so it reads as a ring rather than a thicker
+     edge. */
+  --focus-w: 2px;
+  --focus-color: var(--acc);
+  --focus-offset: 2px;
+
   /* One static paint on the root, now neutral rather than accent-washed. */
   --aurora:
     radial-gradient(1100px 760px at 4% -10%, color-mix(in srgb, var(--s2) 55%, transparent), transparent 55%),
