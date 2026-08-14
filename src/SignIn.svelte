@@ -37,6 +37,19 @@
     noAccess = false,
     /** Shown small under the button, so it reads as one estate rather than one app. */
     siblings = [],
+    /**
+     * A few honest facts about the house, shown before sign-in.
+     *
+     * Every value here comes from `GET /public/glance`, whose allowlist answered one
+     * question per entity: *would this tell a stranger whether the house is empty?*
+     * Solar, battery, grid state, the water tank and the outside temperature do not.
+     * Indoor climate, doors, motion and the alarm are excluded there, not here — this
+     * component renders whatever it is handed, so the judgement belongs at the source
+     * where it can be reviewed in one place.
+     *
+     * Empty array hides the strip entirely rather than showing a row of dashes.
+     */
+    glance = [],
   }: {
     product: string;
     mark?: string;
@@ -47,6 +60,7 @@
     error?: string | null;
     noAccess?: boolean;
     siblings?: string[];
+    glance?: Array<{ key: string; label: string; value: number | null; unit: string; text: string | null }>;
   } = $props();
 </script>
 
@@ -99,6 +113,25 @@
       {/if}
 
       <p class="once">One sign-in reaches every portal.</p>
+    {/if}
+
+    {#if glance.length > 0}
+      <!-- The house, before you are in. Deliberately not a dashboard: five or six
+           figures, no chart, no live tick. A missing sensor shows an em dash rather
+           than a zero, because "0 W of solar" is a claim about the house and "—" is a
+           claim about the data. -->
+      <div class="glance">
+        {#each glance as g (g.key)}
+          <div class="glance__i">
+            <div class="glance__v num">
+              {#if g.text !== null}{g.text}
+              {:else if g.value !== null}{g.value}<span class="glance__u">{g.unit}</span>
+              {:else}—{/if}
+            </div>
+            <div class="glance__l">{g.label}</div>
+          </div>
+        {/each}
+      </div>
     {/if}
 
     {#if siblings.length > 0}
@@ -299,6 +332,40 @@
   .once {
     margin: 16px 0 0;
     font-size: 0.72rem;
+    color: var(--mut);
+  }
+
+  .glance {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(5.2rem, 1fr));
+    gap: var(--sp-2, 8px);
+    margin-top: var(--sp-5, 24px);
+    padding-top: var(--sp-4, 16px);
+    border-top: 1px solid var(--line);
+    text-align: left;
+  }
+  .glance__i {
+    min-width: 0;
+  }
+  .glance__v {
+    font-size: var(--fs-lead, 1rem);
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    color: var(--tx);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .glance__u {
+    margin-left: 1px;
+    font-size: var(--fs-micro, 0.72rem);
+    font-weight: 700;
+    color: var(--mut);
+  }
+  .glance__l {
+    margin-top: 1px;
+    font-size: var(--fs-micro, 0.72rem);
+    font-weight: 700;
     color: var(--mut);
   }
 
