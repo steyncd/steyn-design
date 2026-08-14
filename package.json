@@ -6,7 +6,8 @@
   "license": "UNLICENSED",
   "private": true,
   "files": [
-    "src"
+    "src",
+    "scripts"
   ],
   "svelte": "./src/index.ts",
   "types": "./src/index.ts",
@@ -20,7 +21,8 @@
     "./surfaces.css": "./src/surfaces.css",
     "./index.css": "./src/index.css",
     "./fmt": "./src/fmt.ts",
-    "./auth": "./src/auth.ts"
+    "./auth": "./src/auth.ts",
+    "./check-env": "./scripts/check-env.mjs"
   },
   "scripts": {
     "check": "svelte-check --tsconfig ./tsconfig.json"
