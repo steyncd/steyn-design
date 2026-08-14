@@ -125,7 +125,12 @@
           <div class="glance__i">
             <div class="glance__v num">
               {#if g.text !== null}{g.text}
-              {:else if g.value !== null}{g.value}<span class="glance__u">{g.unit}</span>
+              {:else if g.value !== null}
+                <!-- Rand prefixes, everything else suffixes. "56R" is not a thing
+                     anybody writes; R56 is. Handled here rather than at the API so
+                     the value stays a number for any other consumer. -->
+                {#if g.unit === "R"}<span class="glance__u glance__u--pre">R</span>{g.value}
+                {:else}{g.value}<span class="glance__u">{g.unit}</span>{/if}
               {:else}—{/if}
             </div>
             <div class="glance__l">{g.label}</div>
@@ -355,6 +360,10 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  .glance__u--pre {
+    margin-left: 0;
+    margin-right: 1px;
   }
   .glance__u {
     margin-left: 1px;
