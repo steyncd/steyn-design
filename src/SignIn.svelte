@@ -49,6 +49,18 @@
      *
      * Empty array hides the strip entirely rather than showing a row of dashes.
      */
+    /**
+     * A line of scripture, shown quietly under the wordmark.
+     *
+     * Its own prop rather than folded into `tagline` because it is doing a different
+     * job: the tagline says what the app is, this says whose house it is. Styled
+     * quieter and set apart so it reads as an inscription rather than as marketing
+     * copy competing with the sign-in button.
+     *
+     * KJV, which is public domain.
+     */
+    verse = null,
+    verseRef = null,
     glance = [],
   }: {
     product: string;
@@ -60,6 +72,8 @@
     error?: string | null;
     noAccess?: boolean;
     siblings?: string[];
+    verse?: string | null;
+    verseRef?: string | null;
     glance?: Array<{ key: string; label: string; value: number | null; unit: string; text: string | null }>;
   } = $props();
 </script>
@@ -78,6 +92,13 @@
 
     <h1 class="name">{product}</h1>
     <p class="tag">{tagline}</p>
+
+    {#if verse}
+      <p class="verse">
+        &ldquo;{verse}&rdquo;
+        {#if verseRef}<span class="verse__ref">{verseRef}</span>{/if}
+      </p>
+    {/if}
 
     {#if noAccess}
       <div class="msg msg--warn">
@@ -253,6 +274,26 @@
     font-size: 0.8125rem;
     line-height: 1.5;
     color: var(--mut);
+  }
+
+  .verse {
+    margin: var(--sp-3, 12px) 0 0;
+    font-size: var(--fs-small, 0.78rem);
+    font-style: italic;
+    line-height: 1.55;
+    color: var(--tx2);
+    /* Set apart by a copper rule rather than a box: an inscription, not a callout. */
+    padding-top: var(--sp-3, 12px);
+    border-top: 1px solid var(--line);
+  }
+  .verse__ref {
+    display: block;
+    margin-top: 3px;
+    font-style: normal;
+    font-size: var(--fs-micro, 0.72rem);
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: var(--acc);
   }
 
   .btn {
