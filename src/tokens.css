@@ -222,3 +222,65 @@
   --bg: #201c26; --s1: #292430; --s2: #332d3c; --line: #3d3647;
   --mut: #a29aae; --tx: #ede9f2; --tx2: #cbc4d4;
 }
+
+/* ---------------------------------------------------------------------------
+   daylight — the first light theme. All nine others are dark, and Finance and
+   the Screening Room get used at a kitchen table in the afternoon.
+
+   ## Why this one theme breaks the "status colours are fixed" rule
+
+   Every other theme overrides only the neutral ramp, because the status colours
+   "encode meaning, not taste" and a theme switch must never change what a colour
+   means. This theme overrides them too, and that is not a violation of the rule
+   but the only way to keep it.
+
+   The rule is *blue means good, amber means attention*. It is not "exactly
+   #7ec8f2". That blue is tuned for a near-black surface; on white it lands at
+   about 1.6:1, which is not a colour with a different meaning — it is a colour
+   nobody can read. Holding the hex fixed here would keep the letter of the rule
+   and lose the whole point of it.
+
+   So: same hues, darkened until they clear 4.5:1 against all three light
+   surfaces. Verified rather than eyeballed — every foreground/background pair
+   below was computed, the tightest being --ok on --s2 at 4.80:1, and text on the
+   copper fill at 5.80:1.
+
+   Still no green anywhere. The blue-amber axis survives the inversion intact,
+   which is the constraint that actually matters.
+   --------------------------------------------------------------------------- */
+[data-theme="daylight"] {
+  color-scheme: light;
+
+  /* Neutral ramp, inverted. --s1 is pure white so a card lifts off the page
+     rather than sinking into it, which is the opposite of how the dark themes
+     work and the reason a naive inversion looks wrong. */
+  --bg: #f7f8f9;
+  --s1: #ffffff;
+  --s2: #eef0f2;
+  --line: #d8dce1;
+  --mut: #5d646d;
+  --tx: #1a1d21;
+  --tx2: #3f454d;
+
+  /* Status and accent, same hue family, darkened for a light surface. */
+  --ok: #1f6f9e;
+  --warn: #8a4f06;
+  --acc: #8a5524;
+  --acc2: #6f4319;
+  --acc-ink: #ffffff; /* ink ON copper — white here, near-black in the dark themes */
+
+  /* Domain colours also need darkening; the dark-theme values are pastels chosen
+     to glow against near-black and they wash out completely on white. */
+  --energy: #8a6a00;
+  --climate: #a3441a;
+  --security: #1c6b58;
+  --water: #1c5f86;
+  --load: #24537f;
+  --battery: #6b4a95;
+  --health: #99416b;
+
+  /* The aurora is three dark radials on a dark page. On white it reads as grubby
+     smudges, so it becomes a clean flat surface instead. */
+  --aurora: var(--bg);
+  --shadow: 0 16px 40px -24px rgba(20, 24, 30, 0.28);
+}

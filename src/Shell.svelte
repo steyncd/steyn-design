@@ -81,6 +81,74 @@
   let links = $state<PortalLink[]>([]);
   let switcherOpen = $state(false);
 
+  /**
+   * Light/dark, remembered.
+   *
+   * All nine original themes were dark and nothing read `prefers-color-scheme`, so
+   * the estate was dark whether or not the room was. `daylight` is the light ramp;
+   * the household's chosen dark theme comes from Fabric's registry and is whatever
+   * is already on the element, so switching back restores *their* theme rather than
+   * resetting everyone to `stone`.
+   */
+  const LIGHT = "daylight";
+  let darkTheme = $state("stone");
+  let isLight = $state(false);
+
+  $effect(() => {
+    const el = document.documentElement;
+    const current = el.dataset.theme ?? "stone";
+    if (current !== LIGHT) darkTheme = current;
+
+    const saved = localStorage.getItem("steyn.appearance");
+    // No stored choice means follow the operating system, which is what somebody
+    // who has never opened this menu almost certainly wants.
+    const wantLight = saved ? saved === "light" : matchMedia("(prefers-color-scheme: light)").matches;
+    isLight = wantLight;
+    el.dataset.theme = wantLight ? LIGHT : darkTheme;
+  });
+
+  function toggleAppearance(): void {
+    isLight = !isLight;
+    localStorage.setItem("steyn.appearance", isLight ? "light" : "dark");
+    document.documentElement.dataset.theme = isLight ? LIGHT : darkTheme;
+  }
+
+  /**
+   * Keyboard shortcuts. `/` focuses the search box, `?` lists them, Escape closes
+   * the mobile rail.
+   *
+   * Guarded on the event target: `/` while typing in a field must be a slash. That
+   * one check is the difference between a shortcut and a bug that makes every text
+   * input eat a character.
+   */
+  let showKeys = $state(false);
+
+  function onKeydown(e: KeyboardEvent): void {
+    const t = e.target as HTMLElement | null;
+    const typing =
+      t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement || t?.isContentEditable;
+
+    if (e.key === "Escape") {
+      showKeys = false;
+      open = false;
+      return;
+    }
+    if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+
+    if (e.key === "/") {
+      const box = document.querySelector<HTMLInputElement>('input[type="search"], [role="search"] input');
+      if (box) {
+        e.preventDefault();
+        box.focus();
+      }
+      return;
+    }
+    if (e.key === "?") {
+      e.preventDefault();
+      showKeys = !showKeys;
+    }
+  }
+
   // Loaded once per mount, never retried on a timer: a sidebar that re-requests
   // the registry every few seconds is a sidebar that costs Firestore reads for
   // nothing. `void` because a failure here is not the app's problem.
@@ -102,6 +170,8 @@
     open = false;
   }
 </script>
+
+<svelte:window onkeydown={onKeydown} />
 
 <div class="shell" class:shell--open={open}>
   <aside class="rail">
@@ -172,8 +242,27 @@
       </button>
       <div class="head__slot">
         {@render header?.()}
+        <button
+          class="head__btn"
+          onclick={toggleAppearance}
+          aria-label={isLight ? "Switch to the dark theme" : "Switch to the light theme"}
+          title={isLight ? "Dark" : "Light"}
+        >
+          <Icon name={isLight ? "clock" : "bolt"} size={16} />
+        </button>
       </div>
     </header>
+
+    {#if showKeys}
+      <!-- Opened with `?`, closed with Escape or the button. Deliberately a small
+           list: three shortcuts somebody remembers beat twelve nobody does. -->
+      <div class="keys" role="dialog" aria-label="Keyboard shortcuts">
+        <div class="keys__row"><kbd>/</kbd><span>Focus search</span></div>
+        <div class="keys__row"><kbd>?</kbd><span>This list</span></div>
+        <div class="keys__row"><kbd>Esc</kbd><span>Close</span></div>
+        <button class="keys__x" onclick={() => (showKeys = false)}>Close</button>
+      </div>
+    {/if}
 
     <main class="content">
       {@render children?.()}
@@ -362,6 +451,59 @@
     gap: 10px;
     min-width: 0;
   }
+  .head__btn {
+    display: grid;
+    place-items: center;
+    padding: 6px;
+    border-radius: var(--r-control);
+    color: var(--mut);
+    flex-shrink: 0;
+  }
+  .head__btn:hover {
+    color: var(--acc);
+  }
+
+  .keys {
+    position: fixed;
+    right: var(--sp-4, 16px);
+    bottom: var(--sp-4, 16px);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2, 8px);
+    padding: var(--sp-4, 16px);
+    border-radius: var(--r-surface);
+    background: var(--s1);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      0 18px 40px rgb(0 0 0 / 0.35);
+  }
+  .keys__row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3, 12px);
+    font-size: var(--fs-small);
+    color: var(--tx2);
+  }
+  .keys kbd {
+    min-width: 2rem;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: var(--s2);
+    box-shadow: inset 0 0 0 1px var(--line);
+    font-family: inherit;
+    font-size: var(--fs-micro);
+    font-weight: 800;
+    text-align: center;
+    color: var(--tx);
+  }
+  .keys__x {
+    margin-top: var(--sp-1, 4px);
+    font-size: var(--fs-micro);
+    font-weight: 700;
+    color: var(--mut);
+  }
+
   .head__burger {
     display: none;
     padding: 6px;
