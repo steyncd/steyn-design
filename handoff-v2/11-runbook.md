@@ -140,3 +140,27 @@ and read-only error aggregation, and those four notes are the most useful part o
 
 Do not silently deviate, and do not implement something you believe is wrong because the
 spec says so. Ask Christo — he refers to items by number.
+
+---
+
+## Health is at `/health`, never `/healthz`
+
+Google's frontend answers `/healthz` on a `*.run.app` URL with **its own 404** and never
+forwards the request to the container. So `curl <service>/healthz` returns 404 no matter
+how healthy the service is, and reads exactly like a failed deploy.
+
+Every Cloud Run service in the estate serves `/health`. Verified live 15 August 2026:
+
+| Service | `/health` | `/healthz` |
+|---|---|---|
+| `fabric-api` | 200 | 404 |
+| `waypoint-api` | 200 | 404 |
+| `homestead-api` | 200 | 404 |
+
+`homestead/server/src/index.ts` already carries the comment — *"That cost a debugging
+session once already in this programme"* — and it cost another one on 15 August, in a
+smoke test written from memory rather than from the code. Hence this table.
+
+**Two probes, not one.** A 200 on `/health` says the service is up; a **404 on a
+deliberately bogus path** is what proves a 401 elsewhere came from the real handler rather
+than a catch-all. One without the other is a test that always passes.
