@@ -7,6 +7,10 @@ D1–D5 were recorded 15 August 2026 on receipt of the pack, **before** anything
 applied. D6 came out of applying it. The pack is now applied — see the summary at the
 foot of this file for exactly what landed and what did not.
 
+D7 and D8 came out of building against it: D7 from `05-features.md` F24, D8 from
+`06-build-order.md` step 2 and the passkey path in `02-login.md`. D8 is a constraint the
+pack does not mention anywhere.
+
 ---
 
 ## D1 · The container query in `tokens.additions.css` is a dead rule
@@ -234,6 +238,90 @@ the server is the single message that would stop the feature being trusted.
 - An option that has already passed is dropped — at 21:00 there is no *this evening*.
   Snoozing to the past creates an item born already due, which the engine surfaces
   immediately: the exact opposite of what was asked for.
+
+---
+
+## D8 · One passkey cannot cover the estate — it is two registrable domains
+
+`02-login.md` describes the passkey path in full and never mentions the Relying Party
+ID. It is the constraint that decides the shape of the whole feature.
+
+**A passkey is bound to an RP ID, which must be a registrable domain.** The credential is
+scoped to it at creation and the *browser* enforces it: an assertion for the wrong RP ID
+is refused locally, before any request is made, so there is no server-side workaround and
+nothing for a verifier to be lenient about.
+
+The estate is two registrable domains:
+
+```
+*.helloliam.co.za    fabric  vault  hindsight  homestead  waypoint
+                     watchlist  www  finance          — eight portals
+www.helloeben.co.za  Front Door
+```
+
+A passkey with RP ID `helloliam.co.za` works across **all eight** of its subdomains — one
+credential, one Face ID, every portal. The same credential **cannot be used on
+`helloeben.co.za` at all**, and Front Door is the address Christo actually gives out.
+
+This is the same boundary as **D3**. There, `helloeben.co.za` being a different *site*
+stripped credentials from a cross-site prefetch. Here it partitions the credential store.
+Two different mechanisms, one underlying fact, and it is now worth stating plainly: the
+estate reads as one thing to the household and as two things to every browser.
+
+### The decision — each site enrols its own, and the screen says so
+
+- The RP ID is derived per request from the verified `Origin` header, matched against
+  `PASSKEY_RP_IDS` (`helloliam.co.za,helloeben.co.za`). **Never from the request body** —
+  a body-supplied RP ID would let a caller nominate the domain its own credential is
+  scoped to, which is the entire protection.
+- Each stored credential records its `rpId`, and an assertion is refused if the stored RP
+  ID is not the one the origin resolves to. The browser should never let that request be
+  made; it is checked anyway, because if it ever fires it is this boundary being crossed
+  and the log line is worth having.
+- Christo therefore holds **two** credentials per device — one per site — not one. Both
+  are made in the same keychain and both are one tap; the cost is one extra enrolment,
+  once, per site per device.
+- **The copy is honest about it.** The offer reads *"Saves a passkey for
+  helloeben.co.za. The portals on the other address will ask for one of their own —
+  passkeys are tied to a single web address."* Somebody who saves a passkey and then finds
+  the portals still asking for Google would reasonably conclude that it had not saved. One
+  sentence prevents that; silence turns a property of WebAuthn into a bug report.
+
+### The three alternatives, and why none of them is better
+
+| Option | Why not |
+|---|---|
+| Put every portal and Front Door on one registrable domain | The real fix, and it is a platform change: DNS, hosting sites, OAuth redirect URIs, the `auth.*` hosts and the address the household has memorised. Far outside a login screen. |
+| Related Origin Requests — `/.well-known/webauthn` on `helloliam.co.za` listing Front Door | This is the mechanism designed for exactly this, and it is still too new. Chrome 128+ and Safari 18+; Firefox does not implement it. It would make Front Door's *only* fast path depend on a well-known file served by a different project **and** on the browser being recent, on the one screen nobody can skip. Revisit when Firefox ships it. |
+| Do the WebAuthn call on a shared auth origin in a frame or a redirect | A redirect, for a flow whose entire brief was "no popup, no redirect". And a cross-site frame lands straight back in storage partitioning, which is the class of bug that has just cost this estate a fortnight. |
+
+### A second thing `02-login.md` assumes and WebAuthn does not offer
+
+The state table says *"Passkey registered on this device → **Continue as \<name\>**"*. A
+page cannot ask that. There is no API for *"do I hold a credential for this RP?"* — the
+only way to find out is to open the platform sheet, and opening a Face ID sheet on a
+device holding nothing is precisely the dead end the redesign exists to remove.
+
+So the screen reads a local hint written when enrolment succeeds, and renders Google-first
+when it is absent. `localStorage` is per **origin** while a credential is per **site**, so
+the hint is missing the first time each of the eight portal subdomains is visited even
+though the credential is usable there. That costs one Google sign-in per subdomain and is
+then repaired silently: after any successful sign-in the client asks `GET /passkeys`, and
+if one already exists for this RP ID it writes the hint instead of offering to enrol a
+second. The error is deliberately in this direction — erring towards Google costs a click,
+erring towards the passkey sheet costs a dead end.
+
+### Not built, deliberately: the path is dormant
+
+`06-build-order.md` step 0 says *"do not build the passkey path on top of a broken Google
+path"*, and step 2 says *"passkey path last, after the auth bug closes"*. Auth came off
+IndexedDB on 15 August and **the owner has not confirmed it works.** Enrolment happens
+after a Google sign-in, so a flaky Google path makes an unreproducible passkey bug.
+
+The mechanism is therefore complete and switched off. `VITE_PASSKEY_ENABLED` is `false`,
+Front Door passes `passkey={null}`, `SignIn` renders exactly as it does today and no
+passkey request is made at all. Turning it on is one line in `.env` once sign-in has been
+confirmed.
 
 ---
 
