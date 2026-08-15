@@ -298,7 +298,15 @@
       </div>
     {/if}
 
-    <main class="content">
+    <!-- `sd-panel` is here, not left to each portal, and that is a fix rather than a
+         tidy-up. The container query in tokens.css targets `.sd-panel` — it has to
+         target a DESCENDANT of `.sd-container`, because a container cannot match its
+         own query (see DEVIATIONS D1). Leaving portals to add the class by hand meant
+         the phone layout silently did nothing until somebody remembered, in a repo
+         where the same class had already been forgotten once. Putting it on the
+         content region means every portal gets the narrow behaviour for free, and a
+         portal that wants a second container still nests one inside. -->
+    <main class="content sd-panel">
       {@render children?.()}
     </main>
   </div>

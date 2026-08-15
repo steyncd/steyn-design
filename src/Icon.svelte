@@ -80,6 +80,13 @@
     // is the pin and stays the portal's own mark.
     trip: '<path d="M5 21c0-6 4-8 7-8s7-2 7-8"/><circle cx="5" cy="21" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="5" r="1.6" fill="currentColor" stroke="none"/>',
 
+    // Plain information. Added because `Jobs.svelte` in Homestead has been asking
+    // for `info` since v0 and the map had no such entry — `P[name] ?? ""` renders
+    // an EMPTY <svg>, so a missing glyph is invisible rather than loud. Deliberately
+    // distinct from `alert`, which is a circle with the same stroke weight but means
+    // something is wrong; this one is a note.
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/>',
+
     // ── added for F24 · Nudge ────────────────────────────────────────────────
     // A bell. The nudge mark, and the one glyph the whole feature needs to be
     // recognisable in a menu that also contains `users`, `clock` and `chat`.

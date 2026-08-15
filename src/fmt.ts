@@ -27,8 +27,12 @@ export const DASH = "—";
 export function zar(v: number | null | undefined, opts: { cents?: boolean } = {}): string {
   if (v == null || !Number.isFinite(v)) return DASH;
   const digits = opts.cents ? 2 : 0;
+  // No space after the R. `01-design-language.md` writes `R2 140` and the design
+  // pack is the visual authority; this formatter had been emitting `R 2 140`, so
+  // the library and the spec disagreed on every money figure in the estate. The
+  // spec wins. The separator inside the number is still the locale's.
   return (
-    "R " +
+    "R" +
     v.toLocaleString(LOCALE, {
       minimumFractionDigits: digits,
       maximumFractionDigits: digits,
