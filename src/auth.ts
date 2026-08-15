@@ -54,6 +54,11 @@
 import { initializeApp, getApp, getApps, type FirebaseOptions } from "firebase/app";
 import {
   getAuth,
+  initializeAuth,
+  browserLocalPersistence,
+  browserSessionPersistence,
+  inMemoryPersistence,
+  browserPopupRedirectResolver,
   GoogleAuthProvider,
   signInWithPopup,
   signInWithRedirect,
@@ -139,7 +144,64 @@ const fabricApp = getApps().some((a) => a.name === "fabric")
   : initializeApp(fabricConfig, "fabric");
 
 export const ownApp = getApps().some((a) => a.name === "[DEFAULT]") ? getApp() : initializeApp(ownConfig);
-export const fabricAuth = getAuth(fabricApp);
+
+/**
+ * Auth, deliberately NOT on IndexedDB.
+ *
+ * ## The bug this fixes
+ *
+ * Sign-in failed intermittently for days with:
+ *
+ *     Sign-in did not complete — Error: Database is closing/hidden
+ *
+ * No `auth/` prefix, because it is not a Firebase auth error at all — it is a raw
+ * WebKit **IndexedDB** error surfacing through Firebase's persistence layer. That is
+ * why every configuration check passed: authDomain, authorised domains, redirect URIs
+ * and the OAuth client were never the problem, and days were spent re-verifying them.
+ *
+ * `getAuth()` installs this persistence chain:
+ *
+ *     indexedDBLocalPersistence → browserLocalPersistence → browserSessionPersistence
+ *     → inMemoryPersistence
+ *
+ * The chain only falls through when IndexedDB is *unavailable*. Safari's failure mode
+ * is worse than unavailable: the database opens, then WebKit closes the connection
+ * underneath it when the tab is hidden or restored — which is precisely what a redirect
+ * sign-in does, and what happens with several portal tabs open, as they routinely are.
+ * The operation then throws rather than falling through, and the throw reaches
+ * `getRedirectResult`, so the credential is never collected and the gate reappears.
+ *
+ * ## The fix
+ *
+ * The same chain with the IndexedDB head removed. Auth state is a handful of small
+ * keys — localStorage holds it perfectly well, and it is the workaround Firebase's own
+ * issue threads land on for this family of Safari faults.
+ *
+ * `initializeAuth` rather than `setPersistence` after the fact: persistence has to be
+ * decided *before* the first read, and a `setPersistence` call still touches IndexedDB
+ * on the way past.
+ *
+ * **`popupRedirectResolver` is not optional here.** `getAuth()` supplies it implicitly;
+ * `initializeAuth` does not, and omitting it makes every popup and redirect throw
+ * `auth/argument-error`. Removing that line replaces one sign-in bug with a worse one.
+ *
+ * Firestore keeps its own IndexedDB and is unaffected — this narrows the blast radius
+ * to auth, which is the part that was breaking.
+ */
+function makeFabricAuth() {
+  try {
+    return initializeAuth(fabricApp, {
+      persistence: [browserLocalPersistence, browserSessionPersistence, inMemoryPersistence],
+      popupRedirectResolver: browserPopupRedirectResolver,
+    });
+  } catch {
+    // Already initialised — a second import in the same page, or HMR. `getAuth` returns
+    // the existing instance with the persistence chosen above still in force.
+    return getAuth(fabricApp);
+  }
+}
+
+export const fabricAuth = makeFabricAuth();
 
 // ── roles ──────────────────────────────────────────────────────────────────
 
@@ -280,6 +342,20 @@ export function explainAuthError(err: unknown): string | null {
     case "auth/popup-blocked":
       return "Your browser blocked the sign-in window, so we tried redirecting instead. If nothing happened, allow popups for this site.";
     default: {
+      /**
+       * Browser storage faults, named — because one of them cost days.
+       *
+       * These arrive with no `auth/` code at all: they are raw IndexedDB or storage
+       * exceptions from WebKit, surfacing through Firebase's persistence layer. Auth is
+       * now off IndexedDB (see `makeFabricAuth`), so this should not fire — and if it
+       * ever does, the sentence needs to point at storage rather than sending somebody
+       * back to re-check the OAuth client for a third time.
+       */
+      const raw = String((err as { message?: string }).message ?? "");
+      if (/database is closing|database is hidden|indexeddb|quota|storage is not available/i.test(raw)) {
+        return `The browser's storage refused this sign-in — "${raw.slice(0, 80)}". This is the browser, not the account. Close the other Steyn tabs and try again; if it repeats, a private window will confirm it.`;
+      }
+
       /**
        * Always say something specific.
        *
