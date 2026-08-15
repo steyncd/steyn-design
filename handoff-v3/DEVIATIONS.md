@@ -356,3 +356,42 @@ confirmed.
   consumes it yet. The type and density changes reflow every layout, and six portals
   had just been redeployed with the sign-in fix — moving them onto an unreviewed
   visual change in the same hour is how a good change gets blamed for a bad evening.
+
+---
+
+## D9–D12 · The HA Dashboard design pass
+
+Recorded in full in `08-ha-dashboard.md`. Two of them correct claims made earlier in this
+file and in the pack, so they are summarised here rather than left in a side document:
+
+**D9 — the heat ramp's "monotonic luminance" claim is false.** `04-portal-screens.md` says
+the room heat ramp is "already correct and colour-blind safe (blue → amber, monotonic
+luminance). Do not touch it." Blue→amber and no green are confirmed. Monotonic is not:
+relative luminance runs `0.157 → 0.410 → 0.434 → 0.497 → 0.234`, rising then falling, so a
+hot room and a cool one sit closer in lightness than two adjacent bands. Bands 2↔3 are
+ΔE00 12.20 with only 2.35 deutan ΔL* — the exact collision the ramp was built to remove.
+**This contradicts a stated instruction and needs Christo's decision.**
+
+**D10 — rule 5 is scoped, not relaxed.** Domain tints move to the WCAG 1.4.11 non-text
+floor of 3:1; all *text* keeps 4.5:1. This is forced rather than chosen: 4.5:1 on the fog
+surface caps the available luminance ratio at 2.18:1, and an exhaustive search over 13,537
+blue candidates for a luminance-paired family returns **zero**.
+
+**D11 — `--security` is renamed** to `--fabric-hi`, with `--security` kept as an alias so
+Screening Room's hand-written usages and HA Portal's three views keep working.
+
+**D12 — the three-metre arithmetic assumes a 55″ panel at a 1920 CSS-px viewport.** Neither
+is confirmed. Every figure in §3 scales with the real measurements.
+
+### And a correction to D4 above
+
+D4 concluded that `--security` ↔ `--health` was the palette's worst collision. **That was
+wrong, because D4 only compared the domain tints to each other.** Including the status
+colours, `--energy` ↔ `--warn` is ΔE00 **2.44** — the just-noticeable difference. Solar
+generation and "something wants your attention" are effectively the same colour to a
+deuteranope, on the portal that displays both side by side. `--security` ↔ `--health` at
+8.33 is only the *fourth* worst pair.
+
+D4's conclusion — that seven categorical hues is more than the palette can carry — survives
+and is strengthened. Its ranking of what to fix first does not. The proposed four-slot set
+takes the worst domain↔status pair from 2.44 to 11.41.
