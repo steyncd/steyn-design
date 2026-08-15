@@ -111,13 +111,44 @@ so it is not the failure mode rule 1 exists to prevent. But `07-acceptance.md` r
 *"no green anywhere"* and greps for it, so the rule as written already fails against
 `main`. Two ways to resolve, and it should be a decision rather than a drift:
 
-- Narrow the rule to *no green carrying state or ranking*, and note the domain tints as a
-  documented exception; or
-- Retone `--security` off the green axis — it sits beside `--water` `#9fd6f5` and
-  `--load` `#3a7cc4`, and under deuteranopia `#3fb79a` desaturates toward exactly those.
-  The second reading is the stronger argument for retoning it.
+### RESOLVED 15 August 2026 — rule narrowed, retone deferred, and here is why
 
-This lands in HA Dashboard's own design pass (`06-build-order.md` step 6) either way.
+I intended to retone it and computed the alternatives first, per rule 5. **The
+computation reversed the decision**, so it is recorded here rather than lost.
+
+Simulating deuteranopia over the seven domain tints, the current green's worst-case
+separation from its peers is **0.200** (nearest: `--health`, both collapsing to near-grey).
+Every cyan/teal candidate I tried scored *worse*, because the blue region is already
+crowded by `--water`, `--load` and `--battery`:
+
+| Candidate | Worst-case separation | Collides with |
+|---|---|---|
+| `#3fa8b7` | 0.115 | `--battery` |
+| `#7bb8d9` | 0.107 | `--battery` |
+| `#4fb3cf` | 0.049 | `--battery` |
+| `#5aa8d6` | **0.008** — effectively identical | `--battery` |
+| *current* `#3fb79a` | *0.200* | *`--health`* |
+
+A full search of HSL space at ≥4.5:1 says the genuinely best-separated tones are pale
+yellows (separation 0.37–0.42) — because deuteranopia preserves the blue–yellow axis.
+But a yellow `--security` collides *semantically* with `--energy` and, far worse, with
+amber `--warn`, which is half the status vocabulary. That is a worse bug than the one
+being fixed.
+
+**The real finding is that seven categorical hues is more than this palette can carry.**
+A deuteranope can reliably separate about four. No single-token edit fixes that, and
+retoning one hue in isolation only moves the collision somewhere less obvious.
+
+So, two changes:
+
+1. **Rule 1 is narrowed** to *no green carrying state, ranking or status* — which is what
+   it was always protecting. `--error` resolving to amber, blue-means-good, and the heat
+   ramp are all unaffected. Domain tints are a documented exception, and they are already
+   covered by *never colour alone*: a domain tint is never the only signal, because every
+   one of those views carries a glyph and a label too.
+2. **The retone is deferred to HA Dashboard's design pass** (`06-build-order.md` step 6),
+   where the whole seven-colour set can be reconsidered together — probably by cutting it
+   to four hues plus luminance, which is the only thing that actually works.
 
 ---
 

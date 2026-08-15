@@ -9,7 +9,7 @@ than looking at it.
 
 | | Rule | How to check |
 |---|---|---|
-| 1 | **No green anywhere** | Grep the diff for green hex and for `--success` used as a colour. The only permitted green is Google's `G`. |
+| 1 | **No green carrying state, ranking or status** | Grep the diff for green hex and for `--success` used as a colour. Permitted: Google's `G`, and the domain tints (`--security`), which are never the only signal — see DEVIATIONS D4 for why retoning that one in isolation makes things worse. |
 | 2 | **Never colour alone** | Every status carries a glyph *and* a word. Screenshot in greyscale — if a state becomes ambiguous, it fails. |
 | 3 | **Em dash, never zero** | Any figure that can be unwired renders `—`. A cached figure presented as live is the same lie. |
 | 4 | **Nothing below 11.5px** | Compute the type histogram. `--fs-micro` is the floor. |
