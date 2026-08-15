@@ -29,6 +29,7 @@
   let {
     product,
     mark = null,
+    surface = "operator",
     nav = [],
     active = "",
     onnavigate,
@@ -46,6 +47,31 @@
      * is anonymous, and four portals side by side on a phone all looked alike.
      */
     mark?: string | null;
+    /**
+     * Type and density. **A different axis from theme, and they must not merge.**
+     *
+     * Theme sets the neutral ramp, belongs to the *user*, and applies estate-wide.
+     * Surface sets headings, figures and density, belongs to the *portal*, and the
+     * user cannot change it. A warm theme on an operator surface is legitimate and
+     * has to look right, so never hard-code a ramp against a surface.
+     *
+     *   operator — Fabric, Hindsight. Dense, Space Grotesk, mono tabular figures.
+     *   home     — Front Door, Vault, Homestead, Waypoint, HA Dashboard. Open,
+     *              Newsreader, large serif figures.
+     *
+     * Body copy is deliberately identical on both. Only headings, figures and
+     * density move — that is what keeps two temperaments from becoming two
+     * products.
+     *
+     * Defaults to `operator` because the failure is asymmetric: a home screen
+     * rendered dense is ugly, an operator table rendered loose is unusable.
+     *
+     * Everything downstream is CSS reading `--row-h`, `--pad-x`, `--gap-section`,
+     * `--font-heading` and `--font-figure`. A component with a hard-coded `34px`
+     * row is a bug — it will be wrong on the other surface, and nobody will notice
+     * until Vault ships.
+     */
+    surface?: "operator" | "home";
     nav?: NavItem[];
     active?: string;
     /** Called with the item id. Omit and Shell falls back to the item's href. */
@@ -173,7 +199,11 @@
 
 <svelte:window onkeydown={onKeydown} />
 
-<div class="shell" class:shell--open={open}>
+<!-- `data-surface` is the entire surface mechanism; everything else is CSS.
+     `sd-container` makes this the container query root, so a panel responds to the
+     space it is actually given rather than to the viewport — which is why a
+     two-column layout could not tell a 400px sidebar from a 1400px page before. -->
+<div class="shell sd-container" class:shell--open={open} data-surface={surface}>
   <aside class="rail">
     <a class="brand" href={homeHref} aria-label={product}>
       <span class="brand__mark" aria-hidden="true">
@@ -182,7 +212,7 @@
       <span class="brand__name">{product}</span>
     </a>
 
-    <nav class="nav" aria-label="Sections">
+    <nav class="nav sd-rail" aria-label="Sections">
       {#each nav as item (item.id)}
         <a
           class="nav__item"
@@ -231,7 +261,7 @@
   </aside>
 
   <div class="main">
-    <header class="head">
+    <header class="head sd-header">
       <button
         class="head__burger"
         aria-label={open ? "Close menu" : "Open menu"}
@@ -240,6 +270,10 @@
       >
         <Icon name={open ? "x" : "chevron-down"} size={18} />
       </button>
+      <!-- The honest answer to "why is this screen so dense". It costs one line and
+           it takes two seconds to explain to anyone who asks, which is better than
+           the alternative of people assuming the dense screens are unfinished. -->
+      <span class="head__surface">{surface === "home" ? "Home" : "Operator"}</span>
       <div class="head__slot">
         {@render header?.()}
         <button
@@ -443,6 +477,27 @@
     /* Solid, not glass: --glass-blur is modals only per the token comment. */
     background: var(--bg);
   }
+  /* Outlined rather than filled: copper means "you can act on this", and this is
+     a label, not a control. Hidden on a narrow rail where the header has to give
+     its room to search. */
+  .head__surface {
+    flex: none;
+    padding: 2px 8px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-pill);
+    font-size: var(--fs-micro);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--mut);
+    white-space: nowrap;
+  }
+  @media (max-width: 860px) {
+    .head__surface {
+      display: none;
+    }
+  }
+
   .head__slot {
     flex: 1;
     display: flex;

@@ -1,2 +1,5 @@
+/* Faces first: the @font-face rules must be registered before anything that
+   sets font-family, or the first paint uses the fallback and swaps visibly. */
+@import "./fonts.css";
 @import "./tokens.css";
 @import "./surfaces.css";

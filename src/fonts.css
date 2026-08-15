@@ -1,0 +1,89 @@
+/* fonts.css — the three v3 faces, self-hosted.
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Self-hosted rather than loaded from a CDN, for three reasons that all matter
+   here: the estate has a strict-ish CSP and no third-party origins; the household
+   is on a South African connection where a round trip to fonts.gstatic.com is not
+   free; and a login screen that reflows when a webfont lands is worse than one
+   that never had a serif. These are the Fontsource builds of the Google Fonts
+   originals — the same files, subsetted to latin.
+
+   Weights are exactly the ones the design uses, and no more. Every extra weight
+   is a file the household downloads and nobody sees:
+
+     Space Grotesk  500  operator headings at rest
+                    700  operator headings, and the `.h` class
+     Newsreader     400  home body-adjacent serif runs
+                    600  home headings — the pack's named weight
+                    700  home figures (`.fig` sets font-weight: 700)
+     JetBrains Mono 400  operator table cells, codes, the errorCode line
+                    700  operator figures (`.fig` again, on the mono side)
+
+   ── On preloading ─────────────────────────────────────────────────────────────
+   `06-build-order.md` asks for Newsreader 600 and Space Grotesk 700 to be
+   preloaded. That is NOT done here, and it is not an oversight: Vite rewrites
+   these `url()`s to content-hashed asset paths at build time, so a hand-written
+   `<link rel="preload">` in a portal's index.html would name a file that stops
+   existing on the next build — which fails silently and costs a round trip
+   rather than saving one. `font-display: swap` is in place, so text paints
+   immediately in the fallback and swaps when the face lands.
+
+   Doing it properly means a Vite plugin that emits the preload tags with the
+   real hashes. Worth it if first paint is measurably hurt; not worth guessing at
+   before anyone has looked. Recorded in handoff-v3/DEVIATIONS.md as D6.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Space Grotesk — operator headings ─────────────────────────────────────── */
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./fonts/space-grotesk-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./fonts/space-grotesk-700.woff2") format("woff2");
+}
+
+/* ── Newsreader — home headings and figures ────────────────────────────────── */
+@font-face {
+  font-family: "Newsreader";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/newsreader-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Newsreader";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./fonts/newsreader-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Newsreader";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./fonts/newsreader-700.woff2") format("woff2");
+}
+
+/* ── JetBrains Mono — operator figures and codes ───────────────────────────── */
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/jetbrains-mono-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./fonts/jetbrains-mono-700.woff2") format("woff2");
+}

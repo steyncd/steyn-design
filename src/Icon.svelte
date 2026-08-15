@@ -63,6 +63,22 @@
     shield: '<path d="M12 3 5 6v5c0 4 3 7 7 8 4-1 7-4 7-8V6z"/>',
     printer: '<path d="M7 9V3h10v6"/><rect x="4" y="9" width="16" height="8" rx="1.5"/><path d="M7 14h10v6H7z"/>',
     chat: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',
+
+    // ── added v3 ─────────────────────────────────────────────────────────────
+    // A key seen end-on: the conventional passkey mark, and distinct in SHAPE
+    // from `shield` — which the v3 mocks borrowed while this was missing. A
+    // shield means *protected*; a passkey is a *credential*, and the sign-in
+    // screen is the one screen every person in the household sees, so it is the
+    // worst possible place to teach the wrong association.
+    passkey: '<circle cx="8" cy="12" r="4"/><path d="M12 12h9"/><path d="M17 12v3.5"/><path d="M20.5 12v2.5"/>',
+
+    // Chores (F6). A checklist rather than a tick, so it reads as "a list of
+    // things to do" at 19px in the rail, where `check` already means "live".
+    chore: '<path d="M4 6h3l1.5 1.5L11 5"/><path d="M4 13h3l1.5 1.5L11 12"/><path d="M14 6.5h6"/><path d="M14 13.5h6"/><path d="M4 20h16"/>',
+
+    // A trip (F13). A road running to a point, distinct from `waypoint`, which
+    // is the pin and stays the portal's own mark.
+    trip: '<path d="M5 21c0-6 4-8 7-8s7-2 7-8"/><circle cx="5" cy="21" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="5" r="1.6" fill="currentColor" stroke="none"/>',
   };
 </script>
 

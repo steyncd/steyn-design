@@ -3,8 +3,9 @@
 Per `07-acceptance.md` — *"when reality disagrees, write the disagreement here with the
 reason. Do not silently deviate."*
 
-Recorded 15 August 2026, on receipt of the pack, **before** anything was applied. Nothing
-in `src/` has been committed to `steyn-design` yet.
+D1–D5 were recorded 15 August 2026 on receipt of the pack, **before** anything was
+applied. D6 came out of applying it. The pack is now applied — see the summary at the
+foot of this file for exactly what landed and what did not.
 
 ---
 
@@ -127,11 +128,11 @@ The v3 pack depends on it in eight places — `01-unblock.md` for step 0, and pl
 **19** (attention rules and the snooze model), **20** (registry-driven nav), **24** (model
 registry). `F24` and the rail both have it as a hard prerequisite.
 
-It is referenced as *"items 1–45"* but no copy exists under `C:\Code\Personal`. Only
-`handoff/` (v1) is present, tracked in this repo.
-
-**Needed before step 1 can proceed as written**, because step 1 item 4 is *"add `surface`
-to `Shell`, plus registry-driven nav (v2 item 20)"* and item 20 is not readable here.
+**RESOLVED the same day.** Christo supplied the pack and it is now tracked at
+`steyn-design/handoff-v2/`. Item 20 (registry-driven nav) turned out to be already
+implemented in `Shell`, and implemented *better* than the spec — as a loader callback
+rather than a `registryUrl` Shell fetches itself. See the summary at the foot of this
+file.
 
 ---
 
@@ -147,3 +148,55 @@ Checked and correct:
 - `#34d399` appears in `tokens.css` but inside a comment documenting the **replaced** heat
   ramp, not as a live value.
 - `#34A853` in `SignIn.svelte` is Google's `G`, which the spec permits by name.
+
+---
+
+## D6 · Font preloading not done, deliberately
+
+`06-build-order.md` step 1 asks for Newsreader 600 and Space Grotesk 700 to be
+preloaded. The three faces are self-hosted in `src/fonts/` with `font-display: swap`,
+but **no preload tags were added.**
+
+Vite rewrites the `url()`s in `fonts.css` to content-hashed asset paths at build time.
+A hand-written `<link rel="preload">` in a portal's `index.html` would therefore name a
+file that stops existing at the next build — which fails silently and *costs* a round
+trip instead of saving one. Worse, it fails in the direction that looks fine locally.
+
+Doing it properly needs a small Vite plugin that emits the tags with the real hashes.
+Worth building if first paint is measurably hurt; not worth guessing at before anyone
+has measured. `font-display: swap` means text paints immediately in the fallback
+either way.
+
+---
+
+## What was applied, and what was not
+
+**Applied to `steyn-design` on 15 August 2026:**
+
+| Item | State |
+|---|---|
+| `tokens.additions.css` appended | done, with D1 fixed inline and D2 annotated |
+| Three faces self-hosted + `fonts.css` | done — 7 weights, `font-display: swap` |
+| `Icon.svelte` — `passkey`, `chore`, `trip` | done |
+| `Shell` — `surface` prop, `data-surface`, `sd-container` | done |
+| `Shell` — surface badge in the header | done |
+| `Shell` — `sd-rail` / `sd-header` view-transition names | done |
+| `SignIn.svelte` replaced | done — every existing prop preserved |
+| `npm run check` | clean, 224 files, 0 errors |
+
+**Not applied:**
+
+- **Registry-driven nav** was already present and is *better than the spec*. The pack
+  asks Shell to fetch `GET /portals` from a `registryUrl`. Shell instead takes a
+  **loader function**, because that endpoint needs the caller's Firebase ID token and
+  Shell has no business knowing how a module authenticates. Keeping it a callback is
+  what lets Shell own no data — the property that stops a bad tag breaking six portals
+  at once. Left as it is.
+- **Speculation Rules** (`Shell.surface.md` §4) — not added. See D3: prefetch is
+  correct for the eight `*.helloliam.co.za` portals but silently useless from Front
+  Door, which is a different site. It needs the per-origin split thought through
+  first, and it is a performance nicety rather than part of the language.
+- **The six dependants were NOT bumped to `v3`.** The tag is cut and pushed; nothing
+  consumes it yet. The type and density changes reflow every layout, and six portals
+  had just been redeployed with the sign-in fix — moving them onto an unreviewed
+  visual change in the same hour is how a good change gets blamed for a bad evening.

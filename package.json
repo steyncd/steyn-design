@@ -1,7 +1,7 @@
 {
   "name": "@steyncd/steyn-design",
-  "version": "2.0.0",
-  "description": "Shared design system for the Steyn portals — tokens, surfaces, Shell, Icon, fmt",
+  "version": "3.0.0",
+  "description": "Shared design system for the Steyn portals \u2014 tokens, surfaces, Shell, Icon, fmt",
   "type": "module",
   "license": "UNLICENSED",
   "private": true,
@@ -22,7 +22,8 @@
     "./index.css": "./src/index.css",
     "./fmt": "./src/fmt.ts",
     "./auth": "./src/auth.ts",
-    "./check-env": "./scripts/check-env.mjs"
+    "./check-env": "./scripts/check-env.mjs",
+    "./fonts.css": "./src/fonts.css"
   },
   "scripts": {
     "check": "svelte-check --tsconfig ./tsconfig.json"
