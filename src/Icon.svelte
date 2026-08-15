@@ -87,6 +87,19 @@
     // something is wrong; this one is a note.
     info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/>',
 
+    // Direction of travel, for Hindsight's answer shapes (F19). Requested from
+    // downstream, which is the right direction for this map to grow.
+    //
+    // These carry NO meaning about good or bad, and that is the whole point: in a
+    // house, a rising figure can be solar generation or it can be a leaking pump.
+    // Colour and the sentence above the chart say which. A glyph that meant
+    // "improving" would be the colour-alone failure wearing a different hat, and
+    // would have to be green to read as such — which is the one thing it can never
+    // be here.
+    "trend-up": '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+    "trend-down": '<path d="M3 7l6 6 4-4 8 8"/><path d="M15 17h6v-6"/>',
+    "chevron-up": '<path d="M5 15l7-7 7 7"/>',
+
     // ── added for F24 · Nudge ────────────────────────────────────────────────
     // A bell. The nudge mark, and the one glyph the whole feature needs to be
     // recognisable in a menu that also contains `users`, `clock` and `chat`.
