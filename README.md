@@ -128,3 +128,16 @@ portals sitting side by side on the Front Door render the same status differentl
   checked against the prototype before the first module ships a screen.
 - Icons are a hand-rolled subset in the HA Portal idiom, not the full Lucide set. Add
   glyphs to the map in `Icon.svelte` as modules need them.
+
+## Cutting a tag
+
+Bump `version` in `package.json` **in the same commit** as the change, then tag.
+
+This has been got wrong twice — `v2.1` shipped reading `2.0.0` and `v3.1` shipped
+reading `3.0.0` — and three separate deploys flagged it, because the consuming
+lockfiles record the stale string against the new commit. The resolved commit is
+what actually governs, so nothing broke; but `npm ls` and any lockfile audit will
+confidently report the wrong version, which is worse than no signal at all.
+
+Tags are immutable once pushed. `v3.1` therefore still carries `3.0.0` internally
+and always will — verify by commit (`40265bc`), not by version string.
