@@ -181,12 +181,29 @@ export function isCancelled(err: unknown): boolean {
  * A failure that is the person's *decision* — closing the popup — is never retried.
  * Reopening a window somebody just dismissed is how software feels possessed.
  */
-export async function signIn(): Promise<void> {
+export async function signIn(forceChooser = false): Promise<void> {
   const provider = new GoogleAuthProvider();
-  // Always show the chooser: this is a two-person household on shared desktops, and
-  // silently resuming as whoever signed in last is how Mandri ends up looking at
-  // Christo's view.
-  provider.setCustomParameters({ prompt: "select_account" });
+  /**
+   * The chooser is NOT forced, and that is what makes "one sign-in reaches every
+   * portal" true rather than merely printed on the screen.
+   *
+   * Firebase Auth persistence is per-origin: signing into fabric.helloliam.co.za cannot
+   * populate vault.helloliam.co.za's IndexedDB, because browsers do not share storage
+   * across origins. What CAN carry across is the Google session itself — so if Google
+   * already knows who you are and the app does not insist on asking again, the second
+   * portal signs you in with no interaction at all. One click at the first door, none
+   * at the rest.
+   *
+   * `prompt: "select_account"` defeated exactly that: it forced the chooser on every
+   * portal every time, which is why each one felt like a separate login.
+   *
+   * The original reason for forcing it was real — a two-person household on shared
+   * desktops, where silently resuming as whoever signed in last is how Mandri ends up
+   * looking at Christo's view. That is preserved by `switchAccount()` below and by the
+   * account being named in every portal's header, rather than by making the common case
+   * worse for everybody.
+   */
+  if (forceChooser) provider.setCustomParameters({ prompt: "select_account" });
 
   try {
     await signInWithPopup(fabricAuth, provider);
@@ -221,11 +238,21 @@ export async function signIn(): Promise<void> {
  * the "I click it and nothing happens" loop. A failure is swallowed deliberately:
  * arriving with no pending redirect is the normal case, not an error.
  */
-export async function completeRedirect(): Promise<boolean> {
+export async function completeRedirect(): Promise<{ signedIn: boolean; error: unknown | null }> {
   try {
-    return (await getRedirectResult(fabricAuth)) !== null;
-  } catch {
-    return false;
+    return { signedIn: (await getRedirectResult(fabricAuth)) !== null, error: null };
+  } catch (err) {
+    /**
+     * Returned, not swallowed.
+     *
+     * This used to `return false` on any failure, so a redirect that came back with a
+     * real error — an unregistered redirect_uri, a credential the handler could not
+     * read — was indistinguishable from the normal case of arriving with no redirect
+     * pending. The gate simply reappeared, and the person clicked again, and around it
+     * went with nothing anywhere saying why. Swallowing that cost a debugging session.
+     */
+    console.error("[auth] redirect sign-in failed", err);
+    return { signedIn: false, error: err };
   }
 }
 
@@ -238,6 +265,8 @@ export async function completeRedirect(): Promise<boolean> {
  */
 export function explainAuthError(err: unknown): string | null {
   if (isCancelled(err)) return null; // a decision, not a fault
+  // The object, unabridged, next to the sentence shown on screen.
+  console.error("[auth] sign-in failed", err);
   const code = String((err as { code?: string }).code ?? "");
   switch (code) {
     case "auth/unauthorized-domain":
@@ -250,12 +279,36 @@ export function explainAuthError(err: unknown): string | null {
       return "This Google account has been disabled for the household.";
     case "auth/popup-blocked":
       return "Your browser blocked the sign-in window, so we tried redirecting instead. If nothing happened, allow popups for this site.";
-    default:
-      // The code is included on purpose: it is the one string that makes a strange
-      // failure searchable, and hiding it behind "try again" has already cost this
-      // programme two debugging sessions.
-      return `Sign-in did not complete${code ? ` (${code})` : ""}. Try again.`;
+    default: {
+      /**
+       * Always say something specific.
+       *
+       * This branch used to render "Sign-in did not complete. Try again." whenever the
+       * error carried no `code` — which is exactly the case where the code is useless
+       * and the message is everything. A non-Firebase exception (a TypeError, a failed
+       * fetch) has a name and a message and no code, so the one screen that could have
+       * explained the failure showed the least informative sentence available. That is
+       * the same sin this function was written to fix, committed one branch further
+       * down.
+       */
+      const name = String((err as { name?: string }).name ?? "");
+      const message = String((err as { message?: string }).message ?? "").trim();
+      const detail = code || [name, message].filter(Boolean).join(": ") || "no detail available";
+      return `Sign-in did not complete — ${detail.slice(0, 200)}`;
+    }
   }
+}
+
+/**
+ * Deliberately pick a different Google account.
+ *
+ * The escape hatch that lets `signIn` stop forcing the chooser: the shared-desktop case
+ * is real, it is just rare, and it deserves a button rather than a tax on every sign-in
+ * on every portal.
+ */
+export async function switchAccount(): Promise<void> {
+  await fbSignOut(fabricAuth);
+  await signIn(true);
 }
 
 export async function signOut(): Promise<void> {
