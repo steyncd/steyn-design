@@ -200,6 +200,43 @@ either way.
 
 ---
 
+## D7 · F24 cannot wrap a `<tr>`, and does not wire itself to the attention engine
+
+`05-features.md` F24 says *"long-press or right-click any figure, row or job in any
+portal"* and *"one component, wired to the attention engine"*. Two qualifications came
+out of building it.
+
+**A `<tr>` is not wrappable.** `Nudge` has to place a trigger button and a positioning
+anchor inside the element it wraps, and the HTML parser hoists a `<button>` straight out
+of a `<tr>` — the table's content model permits only `<td>`/`<th>` there. So `as="tr"`
+would produce markup that silently rearranges itself. The component takes `as="td"`
+instead and the row's leading cell carries the nudge, which is where a thumb lands
+anyway. A row built from divs, which is what most of these screens actually use, wraps
+directly.
+
+**It emits rather than posts.** The component calls no API; it hands a structured payload
+to `onnudge` and the portal posts to `POST /attention`. This is not a smaller version of
+the feature — it is the same rule that makes `SignIn` presentational and `Shell` own no
+routing, and it exists because this package is consumed at a git tag by six portals at
+once. A network call inside a shared component is a bad tag away from breaking every
+table in the estate simultaneously, and the F24 acceptance test (*"a nudge created from a
+portal arrived on a phone and was acted on"*) is unaffected by which side of the boundary
+the `fetch` sits on.
+
+A consequence worth stating: `Nudge` therefore shows **no confirmation**. Only the portal
+knows whether the write landed, and "Reminder set" rendered before anyone has spoken to
+the server is the single message that would stop the feature being trusted.
+
+**Two smaller findings**, both fixed rather than shipped:
+
+- On a Sunday, *tomorrow morning* and *next week* both resolve to Monday 07:00. Duplicate
+  rows are deduplicated and the earlier, more precise wording wins.
+- An option that has already passed is dropped — at 21:00 there is no *this evening*.
+  Snoozing to the past creates an item born already due, which the engine surfaces
+  immediately: the exact opposite of what was asked for.
+
+---
+
 ## What was applied, and what was not
 
 **Applied to `steyn-design` on 15 August 2026:**

@@ -59,8 +59,15 @@ import "@steyncd/steyn-design/index.css";
 | `src/surfaces.css` | Base resets, keyframes, and the surface primitives — also verbatim |
 | `src/index.css` | Imports both. This is the one file a module needs. |
 | `src/Shell.svelte` | Sidebar + sticky header + content slot |
+| `src/SignIn.svelte` | The sign-in gate. Presentational — the portal passes `onsignin` |
+| `src/Panel.svelte` | Loading / error / empty / content, decided once |
+| `src/Skeleton.svelte` | Loading placeholder |
+| `src/Nudge.svelte` | F24 — wraps anything so it can become a reminder. Emits, never posts |
 | `src/Icon.svelte` | Lucide-shaped line icons, 18px default, 1.7px stroke, `currentColor` |
 | `src/fmt.ts` | `zar()`, `dateZA()`, `kwh()`, `durationH()` — all `en-ZA` / `Africa/Johannesburg` |
+
+Last change 15 August 2026 — `Nudge` (F24). Deviations from the handover packs are
+recorded in `handoff-v3/DEVIATIONS.md`, per `07-acceptance.md` rule 10.
 
 ### Surface primitives
 

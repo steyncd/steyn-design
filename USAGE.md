@@ -64,6 +64,7 @@ a colour, compute it before shipping it.
 | `SignIn` | Every sign-in gate. Presentational — you pass `onsignin`. |
 | `Panel` | Any panel that loads. Handles loading / error / empty / content. |
 | `Skeleton` | Loading placeholder, if you are not using `Panel`. |
+| `Nudge` | Anything that should be able to become a reminder — a figure, a row, a job. |
 | `Icon` | All glyphs. Never inline an SVG. |
 
 ### `Panel` is not optional dressing
@@ -85,6 +86,82 @@ empty, and the `empty` snippet is a **required** prop — you cannot ship a bare
   <table>…</table>
 </Panel>
 ```
+
+### `Nudge` — F24, anything can become a nudge
+
+Wrap a figure, a row or a job. Long-press on touch, right-click on a pointer, or
+the Menu key on a keyboard, and the thing offers to become a reminder: **Remind
+me · Remind us · Snooze until… · Send to WhatsApp**.
+
+It calls **no API**. It hands you a payload and you post it, the same way `SignIn`
+is presentational and `Shell` owns no routing — this package ships to six portals
+at one git tag, and a component with a network call in it is a component that can
+break every table in the estate from a bad tag.
+
+```svelte
+<script lang="ts">
+  import { Nudge, type NudgePayload } from "@steyncd/steyn-design";
+
+  async function post(n: NudgePayload) {
+    await api("/attention", {
+      method: "POST",
+      body: {
+        dedupeKey: n.subject.key,          // Fabric upserts on (source, dedupeKey)
+        title: n.subject.title,
+        url: n.subject.url,
+        severity: n.severity,              // item 19: info | attention | urgent
+        snoozeUntil: n.when?.at ?? null,   // absolute ISO, already resolved
+        audience: n.audience,              // "me" | "household"
+        channel: n.channel,                // "attention" | "whatsapp"
+      },
+    });
+    toast(n.when ? `Reminder set for ${n.when.label.toLowerCase()}` : "Reminder set");
+  }
+</script>
+
+{#each jobs as job (job.id)}
+  <Nudge
+    subject={{
+      key: `homestead:job:${job.id}`,
+      title: job.name,
+      detail: job.due ? `Due ${dateZA(job.due)}` : null,
+      url: `https://homestead.helloliam.co.za/#/jobs/${job.id}`,
+      portalId: "homestead",
+    }}
+    onnudge={post}
+  >
+    <JobRow {job} />
+  </Nudge>
+{/each}
+```
+
+Four things worth knowing before you wire it:
+
+**The timestamps are absolute.** `when.at` is an ISO instant, never `"tomorrow"`.
+The person picked a moment; send the moment. If the wire carried the word, the
+server would re-derive "tomorrow morning" against its own clock, hours later and
+possibly across midnight. `when.label` is there so your toast can quote the words
+they actually read.
+
+**Options that have already passed are not offered.** At 21:00 there is no "this
+evening"; on a Sunday there is no "this weekend". A snooze that resolves to the
+past is an item born already due, which the attention engine surfaces instantly —
+the exact opposite of what was asked for. So the menu is shorter late at night,
+and that is correct rather than broken.
+
+**Say nothing until the write lands.** `Nudge` shows no confirmation, because only
+you know whether the POST succeeded. "Reminder set" on a dead connection is the
+one message that stops the feature being trusted.
+
+**Wrap the row, not the cell.** Every `Nudge` adds one keyboard trigger, so one
+per row is a tab stop per row and one per cell is six. In a real `<table>` pass
+`as="td"` on the leading cell — not `as="tr"`, because the parser hoists a
+`<button>` straight back out of a `<tr>`.
+
+The menu is a `popover` in the top layer with CSS anchor positioning, so it is
+above every `overflow: hidden` card without a z-index and it is not clipped when
+it opens on row 40 of a scrolling table. Browsers without anchor positioning get
+about twenty lines of fallback maths; there is no positioning library.
 
 ## Accessibility, already handled centrally
 
