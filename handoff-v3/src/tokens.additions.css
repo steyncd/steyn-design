@@ -1,0 +1,150 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   v3 additions — APPEND to steyn-design/src/tokens.css
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Changes no existing value. Every v2 token keeps its name and its hex, so
+   Screening Room's ~100 hand-written var() usages are untouched.
+
+   Two things are added:
+     1. Font family tokens — the estate had none, so faces were inherited
+        from the browser and every portal looked slightly different.
+     2. A `surface` axis — type and density, set by the portal, orthogonal to
+        `theme`, which sets the neutral ramp and belongs to the user.
+
+   THEME AND SURFACE ARE DIFFERENT AXES. A warm theme on an operator surface is
+   legitimate and must look right. Do not hard-code a ramp into a surface.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ---- Faces. Self-hosted; see fonts.css. --font-body is unchanged behaviour,
+     named here so it stops being implicit. */
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-ui: "Space Grotesk", system-ui, -apple-system, sans-serif;
+  --font-serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* ---- Surface defaults = operator. A portal that declares nothing gets the
+     dense treatment, which is the safer default: a home screen rendered dense
+     is ugly, an operator table rendered loose is unusable. */
+  --font-heading: var(--font-ui);
+  --font-figure: var(--font-mono);
+  --figure-numeric: tabular-nums;
+  --row-h: 34px;
+  --pad-x: var(--sp-5);
+  --gap-section: 20px;
+  --figure-size: 1.375rem; /* 22px */
+  --figure-tracking: -0.03em;
+}
+
+/* ---- Home surfaces: Vault, Waypoint, Homestead, HA Dashboard, Front Door.
+   Open, serif, and slower. Body copy is deliberately NOT changed — only
+   headings, figures and density. A paragraph reads identically on both
+   surfaces, and that is what stops the two becoming two products. */
+[data-surface="home"] {
+  --font-heading: var(--font-serif);
+  --font-figure: var(--font-serif);
+  --figure-numeric: normal;
+  --row-h: 52px;
+  --pad-x: var(--sp-6);
+  --gap-section: var(--sp-6);
+  --figure-size: 1.875rem; /* 30px */
+  --figure-tracking: -0.02em;
+}
+
+/* ---- Explicit operator, for a portal that wants to state it rather than
+   inherit it. Identical to the :root defaults on purpose. */
+[data-surface="operator"] {
+  --font-heading: var(--font-ui);
+  --font-figure: var(--font-mono);
+  --figure-numeric: tabular-nums;
+  --row-h: 34px;
+  --pad-x: var(--sp-5);
+  --gap-section: 20px;
+  --figure-size: 1.375rem;
+  --figure-tracking: -0.03em;
+}
+
+/* ---- The figure treatment, as one class, so no portal reinvents it.
+   Units are demoted and never wrap onto their own line. */
+.fig {
+  font-family: var(--font-figure);
+  font-variant-numeric: var(--figure-numeric);
+  font-size: var(--figure-size);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: var(--figure-tracking);
+  color: var(--tx);
+  white-space: nowrap;
+}
+.fig__u {
+  font-size: var(--fs-micro);
+  font-weight: 500;
+  color: var(--mut);
+}
+
+/* ---- Headings pick up the surface face automatically. */
+h1, h2, h3, h4, .h {
+  font-family: var(--font-heading);
+}
+
+/* ═══ The sign-in gate ═══════════════════════════════════════════════════════
+   The ONE place in the estate where a ramp is hard-coded, and the reason is
+   sound: this screen renders before any user is known, so there is no theme to
+   honour. It pins the warm ramp because the gate is the one screen the whole
+   family sees and it should not open cold.
+
+   If you add a theme, you do not need to touch this block.
+   ══════════════════════════════════════════════════════════════════════════ */
+[data-gate] {
+  --bg: #1d1c1a;
+  --s1: #262421;
+  --s2: #302d29;
+  --line: #403b35;
+  --mut: #a09488;   /* 7.0:1 on --bg — computed, not chosen by eye */
+  --tx: #f2ede6;
+  --tx2: #ccc3b8;
+  --acc: #dd9455;
+  --acc2: #c47f42;
+  --acc-ink: #1d1c1a;
+  color-scheme: dark;
+}
+
+/* ═══ Container queries ══════════════════════════════════════════════════════
+   Replaces the single 860px breakpoint. Shell is the container; a panel
+   responds to the space it is actually given, so a two-column layout behaves
+   correctly in a 400px sidebar and a 1400px page — which the media query
+   could not distinguish.
+   ══════════════════════════════════════════════════════════════════════════ */
+.sd-container {
+  container-type: inline-size;
+  container-name: panel;
+}
+
+/* Named thresholds, so "narrow" means the same thing in every portal. */
+@container panel (max-width: 560px) {
+  :root { --row-h: auto; }
+}
+
+/* ═══ View transitions ═══════════════════════════════════════════════════════
+   The chrome stays still while the content changes, which is what makes nine
+   portals feel like one application rather than nine tabs.
+   ══════════════════════════════════════════════════════════════════════════ */
+@view-transition { navigation: auto; }
+
+.sd-rail   { view-transition-name: sd-rail; }
+.sd-header { view-transition-name: sd-header; }
+
+::view-transition-old(sd-rail),
+::view-transition-new(sd-rail),
+::view-transition-old(sd-header),
+::view-transition-new(sd-header) {
+  animation: none; /* pinned — the chrome must not cross-fade */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

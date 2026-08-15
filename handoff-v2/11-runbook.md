@@ -1,0 +1,142 @@
+# 11 — Runbook
+
+Build order, what each step unblocks, and how to know it worked. Roughly four to five
+weeks of evenings; the first two days move the needle more than the rest combined.
+
+---
+
+## Step 0 — Unblock · half a day
+
+All of `01-unblock.md`. Nothing else in this pack can be tested end to end until Christo
+can sign in and the schedulers exist.
+
+**Done when:** Christo signs in at the Front Door, sees his name and four blue live dots;
+the admin screen lists him as `owner`; `GET /digest` returns a body.
+
+---
+
+## Step 1 — Hindsight starts carrying rows · half a day
+
+Items **43** then **42**. Independent of everything else and the only item losing value
+every day it waits — the MariaDB purge is deleting history now.
+
+**Done when:** today's partition has thousands of rows and `MIN(ts)` predates the purge
+window.
+
+---
+
+## Step 2 — The platform floor · one week
+
+Items **3** (drift sweep), **12** (audit trail), **7** (claims ledger), **13** (step-up).
+
+Build these before a fourth module lands in `steyn-fabric`, not after. Every later item
+writes to the audit trail, and step-up guards every button items 1 and 6 add.
+
+**Done when:** breaking a config invariant deliberately produces one attention item on
+the Front Door with a working fix command, and every write from the admin screen appears
+in *What changed today*.
+
+---
+
+## Step 3 — Know what it costs and whether it works · one week
+
+Items **18** (one dataset) → **15** (real health) → **16** (cost) → **14** (cold starts)
+→ **17** (headroom).
+
+In that order: 18 gives the other three somewhere to write.
+
+**Done when:** the Front Door's *this month* is a figure rather than a dash, and stopping
+a backend while leaving its site up turns the dot amber within ten minutes.
+
+---
+
+## Step 4 — What Vault inherits · half a week
+
+Items **19** (attention rules) and **20** (registry nav) — both gates, both cheap, both
+things Vault would otherwise reimplement badly. Then **22** (flags) and **23** (digest
+preview) while you are in the same code.
+
+**Done when:** a snoozed item stays gone for a week and comes back; a new portal added to
+the registry appears in HA Portal's switcher without a deploy.
+
+---
+
+## Step 5 — Vault · two weeks
+
+`06-vault.md`. Ship **25** (expiry) and **26** (WhatsApp intake) in v0 — they are the
+whole adoption story and a Vault without them is a folder with extra steps. Then 29, 27,
+30, 28.
+
+**Done when:** a photo forwarded on WhatsApp appears in the queue within a minute, is
+confirmed on one screen, and something expiring in 30 days shows up in the morning digest.
+
+---
+
+## Step 6 — Homestead · one and a half weeks
+
+`07-homestead.md`. `POST /jobs` **first** — Hindsight's drift rules have been posting into
+nothing. Then 31 (run-hours), 32, 33, 34, 35, 36.
+
+**Done when:** a Hindsight drift job appears in Homestead's list, and the pump's next
+service is predicted from run-hours rather than a date.
+
+---
+
+## Step 7 — Waypoint · one and a half weeks
+
+`08-waypoint.md`. The WhatsApp nudge with a costed trip and next weekend loaded is v0, not
+a follow-up. Then 37, 38, 39, 40, 41.
+
+**Done when:** Friday's nudge arrives with a real rand figure and one tap books, files the
+confirmation in Vault and issues the house-sitter pass.
+
+---
+
+## Step 8 — The remaining DevOps surface · one week
+
+Items **2** (readiness), **1** (rollback), **4** (environment cards), **6** (runbook
+buttons), **5** (previews), **10** (App Check), **11** (sessions), **8** (guest passes),
+**9** (role preview), **21** (search), **24** (model registry).
+
+Ordered by how often you will use them, not by how interesting they are.
+
+---
+
+## Gates — the ten marked **before Vault ships**
+
+2 · 3 · 7 · 10 · 12 · 15 · 16 · 19 · 20 · 25 · 31 · 37 · 42 · 43
+
+The first nine are Fabric's floor. The last five are each portal's one feature that, if
+it slips, makes the portal not worth opening.
+
+---
+
+## Verifying anything
+
+```bash
+# health of the whole estate
+curl -s https://fabric-api-685867683378.africa-south1.run.app/health
+
+# the drift sweep, on demand (needs an OIDC token)
+gcloud scheduler jobs run drift-sweep --location=africa-south1 --project=steyn-fabric
+
+# does Hindsight have today's rows
+bq query --use_legacy_sql=false \
+  'SELECT COUNT(*) FROM `steyn-fabric.home.state_raw` WHERE DATE(ts) = CURRENT_DATE()'
+
+# what did CI last do
+gh run list --repo steyncd/fabric --limit 5
+```
+
+---
+
+## When something in this pack is wrong
+
+It will be — this was written from the repos on 2026-08-11, not from running the system.
+Follow v1's habit: implement what the spec says, and when reality disagrees, write the
+disagreement down under **Deviations from the spec** in that repo's README, with the
+reason. Fabric's v1 README does this for the USD budget, the two added routes, passkeys
+and read-only error aggregation, and those four notes are the most useful part of it.
+
+Do not silently deviate, and do not implement something you believe is wrong because the
+spec says so. Ask Christo — he refers to items by number.
