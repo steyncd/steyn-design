@@ -100,6 +100,15 @@
     "trend-down": '<path d="M3 7l6 6 4-4 8 8"/><path d="M15 17h6v-6"/>',
     "chevron-up": '<path d="M5 15l7-7 7 7"/>',
 
+    // Voice entry on the shared list (F8). Requested from Front Door, which was
+    // shipping the button labelled "Speak" with no glyph rather than drawing one
+    // locally — the right call, and the reason this entry exists.
+    //
+    // A capsule and a stand, not a waveform: a waveform reads as "audio playing"
+    // where this means "the microphone is listening", and the two are opposite
+    // states to be confused about on a screen in a kitchen.
+    mic: '<rect x="9" y="3" width="6" height="10" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8.5 21h7"/>',
+
     // ── added for F24 · Nudge ────────────────────────────────────────────────
     // A bell. The nudge mark, and the one glyph the whole feature needs to be
     // recognisable in a menu that also contains `users`, `clock` and `chat`.
