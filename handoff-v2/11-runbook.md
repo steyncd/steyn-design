@@ -164,3 +164,49 @@ smoke test written from memory rather than from the code. Hence this table.
 **Two probes, not one.** A 200 on `/health` says the service is up; a **404 on a
 deliberately bogus path** is what proves a 401 elsewhere came from the real handler rather
 than a catch-all. One without the other is a test that always passes.
+
+---
+
+## Module allow-lists — two deployed variables that are wrong
+
+Verified against live Cloud Run on 16 August 2026. Every service runs as
+`<name>@steyn-fabric.iam.gserviceaccount.com` — confirmed, not assumed:
+
+| Service | Runs as |
+|---|---|
+| `fabric-api` | `fabric-api@steyn-fabric…` |
+| `homestead-api` | `homestead-api@steyn-fabric…` |
+| `waypoint-api` | `waypoint-api@steyn-fabric…` |
+
+`MODULE_SERVICE_ACCOUNTS` is how each service decides which *other* service may call
+its module doors. Two are incomplete, and each one silently disables a feature that is
+otherwise built and deployed:
+
+| Service | Deployed value | Missing | Feature it blocks |
+|---|---|---|---|
+| `fabric-api` | `hindsight=…, vault-api=…` | `homestead-api`, `waypoint-api` | F16 — Waypoint cannot issue the house-sitter pass. Returns `Unknown service account`. |
+| `homestead-api` | `hindsight=…` | `fabric-api` | F2 — replying "done" on WhatsApp cannot confirm a chore. Fails shut with a 403. |
+
+Both fail *closed*, so nothing is insecure — the features simply do not work, and they
+report honestly rather than silently. Neither is a code change; both are one command:
+
+```bash
+gcloud run services update fabric-api --region africa-south1 --project steyn-fabric \
+  --update-env-vars "^##^MODULE_SERVICE_ACCOUNTS=vault-api@steyn-fabric.iam.gserviceaccount.com=vault,homestead-api@steyn-fabric.iam.gserviceaccount.com=homestead,waypoint-api@steyn-fabric.iam.gserviceaccount.com=waypoint,hindsight@steyn-fabric.iam.gserviceaccount.com=hindsight"
+```
+
+```bash
+gcloud run services update homestead-api --region africa-south1 --project steyn-fabric \
+  --update-env-vars "^##^MODULE_SERVICE_ACCOUNTS=hindsight@steyn-fabric.iam.gserviceaccount.com=hindsight,fabric-api@steyn-fabric.iam.gserviceaccount.com=fabric"
+```
+
+The `^##^` prefix sets `##` as the delimiter, because the value itself contains commas.
+Plain `--update-env-vars "K=v"` is right for a value with no commas and **wrong here** —
+gcloud would split the list into separate variables.
+
+**Why this drifted:** `.env.example` named service accounts in `steyn-waypoint`,
+`steyn-homestead` and two sibling projects that `handoff/PROJECT-IDS.md` records as empty
+and unlinked since the consolidation. Waypoint's real token would have come back
+`Unknown service account` — an auth bug in appearance, a stale variable in fact. The
+example file is now corrected; the deployed variables are not. Drift rule D8 checks each
+entry resolves inside `steyn-fabric`, so a sweep should now catch this class.
