@@ -210,3 +210,50 @@ and unlinked since the consolidation. Waypoint's real token would have come back
 `Unknown service account` — an auth bug in appearance, a stale variable in fact. The
 example file is now corrected; the deployed variables are not. Drift rule D8 checks each
 entry resolves inside `steyn-fabric`, so a sweep should now catch this class.
+
+---
+
+## `iam.serviceAccounts.signBlob` — the one grant that unblocks custom tokens
+
+Observed live on 16 August 2026, on Screening Room's sign-in:
+
+```
+exchange/403 Permission 'iam.serviceAccounts.signBlob' denied on resource
+(or it may not exist).
+```
+
+**Cause.** `fabric-api` mints Firebase custom tokens with `createCustomToken()`. On Cloud
+Run there is no service-account private key, so the Admin SDK falls back to calling IAM's
+`signBlob` API on the identity the code runs as. That requires the caller to hold
+`iam.serviceAccounts.signBlob` **on its own service account**.
+
+Verified state: `fabric-api@steyn-fabric…` grants `roles/iam.serviceAccountTokenCreator`
+to `user:steyncd@gmail.com` and `roles/iam.serviceAccountUser` to the deployer — but
+**nothing grants the SA that role on itself**. `roles/firebaseauth.admin`, which it does
+hold, does not include `signBlob`.
+
+**The fix — one command:**
+
+```bash
+gcloud iam service-accounts add-iam-policy-binding fabric-api@steyn-fabric.iam.gserviceaccount.com \
+  --member="serviceAccount:fabric-api@steyn-fabric.iam.gserviceaccount.com" \
+  --role="roles/iam.serviceAccountTokenCreator" \
+  --project=steyn-fabric
+```
+
+Yes, the member and the resource are the same account. That is correct and not a typo —
+the SA needs permission to sign *as itself*.
+
+### What this is currently breaking
+
+| Feature | Symptom today |
+|---|---|
+| `/exchange` — one household sign-in for Screening Room, HA Portal, HQ Finance | Sign-in fails with the 403 above. This is the whole legacy-portal unification. |
+| **The passkey path** (`POST /passkeys/signin/verify`) | Would fail identically the moment `VITE_PASSKEY_ENABLED` is switched on — it mints a custom token by the same call. **Fix this before enabling passkeys**, or the first test looks like a passkey bug. |
+
+### A correction to an earlier claim
+
+`/exchange` was previously recorded as "live and verified". It was verified as *deployed
+and responding* — a `GET /exchange/ready` and a 401 on an anonymous call. Neither exercises
+`createCustomToken()`, so neither could have caught this. A route that answers is not a
+route that works, and the negative probe has to reach the code path that does the work.
